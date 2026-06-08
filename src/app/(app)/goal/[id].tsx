@@ -78,7 +78,7 @@ export default function GoalDetailScreen() {
     ]);
 
   return (
-    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
+    <ScrollView contentInsetAdjustmentBehavior="never" style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ headerShown: true, title: 'Goal' }} />
 
       <TextField label="Title" value={title} onChangeText={setTitle} />

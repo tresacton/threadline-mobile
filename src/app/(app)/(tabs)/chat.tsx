@@ -61,7 +61,7 @@ export default function ChatListScreen() {
           </Pressable>
         </View>
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={conversations.data}
           keyExtractor={(c) => String(c.id)}
           contentContainerStyle={styles.list}

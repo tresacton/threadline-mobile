@@ -31,7 +31,7 @@ export default function DraftsScreen() {
           body="Memories you draft in chat but haven't saved yet will wait here."
         />
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={drafts.data}
           keyExtractor={(c) => String(c.id)}
           contentContainerStyle={styles.list}

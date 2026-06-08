@@ -60,7 +60,7 @@ export default function MoreScreen() {
   const { user, logout } = useAuth();
 
   return (
-    <ScrollView
+    <ScrollView contentInsetAdjustmentBehavior="never"
       style={{ backgroundColor: theme.background }}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.two }]}
     >

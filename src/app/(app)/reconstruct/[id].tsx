@@ -51,7 +51,7 @@ export default function ReconstructScreen() {
   const others = (memories.data ?? []).filter((m) => m.id !== memoryId);
 
   return (
-    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
+    <ScrollView contentInsetAdjustmentBehavior="never" style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ headerShown: true, title: 'Reconstruct date' }} />
       <Text style={[styles.lead, { color: theme.textSecondary }]}>
         Add what you do know — which memories came before or after this one — and the companion narrows it

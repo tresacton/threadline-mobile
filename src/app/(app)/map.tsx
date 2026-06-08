@@ -49,7 +49,7 @@ export default function MapScreen() {
           body="As your memories connect people, places and periods, they'll appear here, most-connected first."
         />
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={entities}
           keyExtractor={(n) => n.id}
           contentContainerStyle={styles.list}

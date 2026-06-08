@@ -62,7 +62,7 @@ export default function ReviewCaptureScreen() {
   const pending = candidates.data ?? [];
 
   return (
-    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
+    <ScrollView contentInsetAdjustmentBehavior="never" style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ headerShown: true, title: 'Review' }} />
 
       <Text style={[styles.lead, { color: theme.textSecondary }]}>

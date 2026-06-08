@@ -122,7 +122,7 @@ export default function ConversationScreen() {
           title: conversation.data?.conversation.title || 'Companion',
           headerRight: () =>
             messages.length > 0 ? (
-              <Pressable onPress={copyAll} hitSlop={10}>
+              <Pressable onPress={copyAll} hitSlop={10} style={styles.headerBtn}>
                 <Ionicons name="copy-outline" size={22} color={theme.primary} />
               </Pressable>
             ) : null,
@@ -133,7 +133,7 @@ export default function ConversationScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           ref={listRef}
           data={messages}
           keyExtractor={(m) => String(m.id)}
@@ -237,6 +237,7 @@ function Bubble({ message, onLongPress }: { message: AiMessage; onLongPress: () 
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  headerBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   messages: { padding: Spacing.four, gap: Spacing.three },
   bubbleRow: { flexDirection: 'row' },
   bubble: { maxWidth: '82%', borderRadius: Radius.lg, paddingHorizontal: Spacing.four, paddingVertical: Spacing.three },

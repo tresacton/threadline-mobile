@@ -53,7 +53,7 @@ export default function PeopleScreen() {
       ) : !people.data || people.data.length === 0 ? (
         <EmptyState title="No people yet" body="Add the people who appear in your memories." />
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={people.data}
           keyExtractor={(p) => String(p.id)}
           contentContainerStyle={styles.list}

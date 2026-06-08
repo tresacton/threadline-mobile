@@ -64,7 +64,7 @@ export default function ReflectScreen() {
       ) : !reflections.data || reflections.data.length === 0 ? (
         <EmptyState title="No reflections yet" body="Your reflections will gather here." />
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={reflections.data}
           keyExtractor={(r) => String(r.id)}
           contentContainerStyle={styles.list}

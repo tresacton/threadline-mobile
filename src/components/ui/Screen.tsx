@@ -43,7 +43,7 @@ export function Screen({ children, scroll = false, padded = true, contentStyle }
         style={[styles.flex, { backgroundColor: theme.background }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <ScrollView contentInsetAdjustmentBehavior="never" contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           {inner}
         </ScrollView>
       </KeyboardAvoidingView>

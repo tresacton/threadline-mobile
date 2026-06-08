@@ -69,7 +69,7 @@ export default function TimelineScreen() {
           headerShown: true,
           title: 'Timeline',
           headerRight: () => (
-            <Pressable onPress={() => setShowFilters((s) => !s)} hitSlop={10}>
+            <Pressable onPress={() => setShowFilters((s) => !s)} hitSlop={10} style={styles.headerBtn}>
               <Ionicons
                 name={hasFilter ? 'funnel' : 'funnel-outline'}
                 size={20}
@@ -119,7 +119,7 @@ export default function TimelineScreen() {
       ) : sections.length === 0 ? (
         <EmptyState title="Nothing here" body={hasFilter ? 'No memories match this filter.' : 'Captured memories will arrange themselves here.'} />
       ) : (
-        <SectionList
+        <SectionList contentInsetAdjustmentBehavior="never"
           sections={sections}
           keyExtractor={(m: TimelineMemory) => String(m.id)}
           stickySectionHeadersEnabled
@@ -147,6 +147,7 @@ export default function TimelineScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  headerBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   controls: { paddingHorizontal: Spacing.four, paddingTop: Spacing.three, gap: Spacing.three },
   filters: { gap: Spacing.three, paddingBottom: Spacing.two },
   clear: { paddingVertical: Spacing.two },

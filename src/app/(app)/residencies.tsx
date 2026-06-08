@@ -69,7 +69,7 @@ export default function ResidenciesScreen() {
       ) : !residencies.data || residencies.data.length === 0 ? (
         <EmptyState title="No residences yet" body="Record where you've lived to reconstruct prior addresses." />
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={residencies.data}
           keyExtractor={(r) => String(r.id)}
           contentContainerStyle={styles.list}

@@ -45,7 +45,7 @@ export default function EgoGraphScreen() {
           title: 'Connections',
           headerRight: () =>
             browsedAway ? (
-              <Pressable onPress={() => setCenter(origin)} hitSlop={10}>
+              <Pressable onPress={() => setCenter(origin)} hitSlop={10} style={styles.headerBtn}>
                 <Ionicons name="refresh" size={20} color={theme.primary} />
               </Pressable>
             ) : null,
@@ -119,6 +119,7 @@ function Warn({ theme, children }: { theme: ReturnType<typeof useTheme>; childre
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  headerBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   empty: { fontSize: 15 },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingHorizontal: Spacing.four, paddingTop: Spacing.three },

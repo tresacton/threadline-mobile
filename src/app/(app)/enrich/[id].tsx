@@ -32,7 +32,7 @@ export default function EnrichScreen() {
   const answered = data.data?.answered ?? [];
 
   return (
-    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
+    <ScrollView contentInsetAdjustmentBehavior="never" style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ headerShown: true, title: 'Add detail' }} />
       <Text style={[styles.lead, { color: theme.textSecondary }]}>
         Gentle, open questions to sit with — answer in your own words, skip any that don’t fit.

@@ -43,7 +43,7 @@ export default function MemoryDetailScreen() {
   const m = memory.data;
 
   return (
-    <ScrollView style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
+    <ScrollView contentInsetAdjustmentBehavior="never" style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ headerShown: true, title: '' }} />
 
       <Text style={[styles.title, { color: theme.text }]}>{m.title || 'Untitled memory'}</Text>

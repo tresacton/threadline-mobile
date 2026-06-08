@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { Select } from '@/components/ui/Select';
 import { TextField } from '@/components/ui/TextField';
+import { TokenInput } from '@/components/ui/TokenInput';
 import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
 import { CATEGORY_OPTIONS, DATE_CONFIDENCE_OPTIONS, SENSITIVITY_OPTIONS } from '@/constants/options';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { Memories } from '@/lib/api/endpoints';
+import { LifePeriods, Memories, People, Places, Tags } from '@/lib/api/endpoints';
 
 export default function EditMemoryScreen() {
   const theme = useTheme();
@@ -20,16 +21,22 @@ export default function EditMemoryScreen() {
   const memoryId = Number(id);
   const memory = useQuery({ queryKey: ['memory', memoryId], queryFn: () => Memories.get(memoryId) });
 
+  // Existing names, for search-as-you-type suggestions.
+  const peopleOpts = useQuery({ queryKey: ['people'], queryFn: People.list });
+  const placeOpts = useQuery({ queryKey: ['places'], queryFn: Places.list });
+  const tagOpts = useQuery({ queryKey: ['tags'], queryFn: Tags.list });
+  const periodOpts = useQuery({ queryKey: ['life_periods'], queryFn: LifePeriods.list });
+
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [dateLabel, setDateLabel] = useState('');
   const [sensitivity, setSensitivity] = useState<string | null>(null);
   const [category, setCategory] = useState<string | null>(null);
   const [dateConfidence, setDateConfidence] = useState<string | null>(null);
-  const [tags, setTags] = useState('');
-  const [people, setPeople] = useState('');
-  const [places, setPlaces] = useState('');
-  const [lifePeriods, setLifePeriods] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [people, setPeople] = useState<string[]>([]);
+  const [places, setPlaces] = useState<string[]>([]);
+  const [lifePeriods, setLifePeriods] = useState<string[]>([]);
 
   useEffect(() => {
     const m = memory.data;
@@ -40,10 +47,10 @@ export default function EditMemoryScreen() {
     setSensitivity(m.sensitivity ?? null);
     setCategory(m.category ?? null);
     setDateConfidence(m.date_confidence ?? null);
-    setTags(m.tags.join(', '));
-    setPeople(m.people.join(', '));
-    setPlaces(m.places.join(', '));
-    setLifePeriods(m.life_periods.join(', '));
+    setTags(m.tags);
+    setPeople(m.people);
+    setPlaces(m.places);
+    setLifePeriods(m.life_periods);
   }, [memory.data]);
 
   const save = useMutation({
@@ -55,10 +62,11 @@ export default function EditMemoryScreen() {
         sensitivity_slug: sensitivity ?? undefined,
         memory_category_slug: category ?? undefined,
         date_confidence_slug: dateConfidence ?? undefined,
-        tag_names: tags,
-        person_names: people,
-        place_names: places,
-        life_period_names: lifePeriods,
+        // The API splits these on commas/newlines into names.
+        tag_names: tags.join('\n'),
+        person_names: people.join('\n'),
+        place_names: places.join('\n'),
+        life_period_names: lifePeriods.join('\n'),
       } as Record<string, unknown>),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['memory', memoryId] });
@@ -92,10 +100,34 @@ export default function EditMemoryScreen() {
       <Select label="Sensitivity" value={sensitivity} options={SENSITIVITY_OPTIONS} onChange={setSensitivity} />
       <Select label="Category" value={category} options={CATEGORY_OPTIONS} onChange={setCategory} />
       <Select label="Date confidence" value={dateConfidence} options={DATE_CONFIDENCE_OPTIONS} onChange={setDateConfidence} />
-      <TextField label="People (comma-separated)" value={people} onChangeText={setPeople} placeholder="Mum, Sh.S" />
-      <TextField label="Places (comma-separated)" value={places} onChangeText={setPlaces} placeholder="Sydney" />
-      <TextField label="Life periods (comma-separated)" value={lifePeriods} onChangeText={setLifePeriods} placeholder="University years" />
-      <TextField label="Tags (comma-separated)" value={tags} onChangeText={setTags} placeholder="work, family" />
+      <TokenInput
+        label="People"
+        value={people}
+        options={(peopleOpts.data ?? []).map((p) => p.name)}
+        onChange={setPeople}
+        placeholder="Search or add a person"
+      />
+      <TokenInput
+        label="Places"
+        value={places}
+        options={(placeOpts.data ?? []).map((p) => p.name)}
+        onChange={setPlaces}
+        placeholder="Search or add a place"
+      />
+      <TokenInput
+        label="Life periods"
+        value={lifePeriods}
+        options={(periodOpts.data ?? []).map((p) => p.name)}
+        onChange={setLifePeriods}
+        placeholder="Search or add a life period"
+      />
+      <TokenInput
+        label="Tags"
+        value={tags}
+        options={(tagOpts.data ?? []).map((t) => t.name)}
+        onChange={setTags}
+        placeholder="Search or add a tag"
+      />
       <Text style={[styles.note, { color: theme.textMuted }]}>
         Your original captured wording is always kept — this edits the structured version.
       </Text>

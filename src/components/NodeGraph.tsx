@@ -127,7 +127,7 @@ export function NodeGraph({ data, onSelectNode }: NodeGraphProps) {
   return (
     <View style={styles.flex} onLayout={onLayout}>
       {size > 0 ? (
-        <ScrollView
+        <ScrollView contentInsetAdjustmentBehavior="never"
           style={styles.flex}
           contentContainerStyle={{ width: size, height: size }}
           centerContent

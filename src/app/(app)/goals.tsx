@@ -88,7 +88,7 @@ export default function GoalsScreen() {
           body={q ? 'Try different words.' : 'Goals organise your reconstruction work.'}
         />
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={displayed}
           keyExtractor={(g) => String(g.id)}
           contentContainerStyle={styles.list}

@@ -35,7 +35,7 @@ export default function NotificationsScreen() {
       ) : !notifications.data || notifications.data.notifications.length === 0 ? (
         <EmptyState title="All caught up" body="Nothing new right now." />
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={notifications.data.notifications}
           keyExtractor={(n) => String(n.id)}
           contentContainerStyle={styles.list}

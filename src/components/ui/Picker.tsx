@@ -83,7 +83,7 @@ export function Picker<T extends string | number>({
             autoCorrect={false}
           />
 
-          <FlatList
+          <FlatList contentInsetAdjustmentBehavior="never"
             data={filtered}
             keyExtractor={(o) => String(o.value)}
             keyboardShouldPersistTaps="handled"

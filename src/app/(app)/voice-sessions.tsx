@@ -26,7 +26,7 @@ export default function VoiceSessionsScreen() {
           body="Live voice calls with your companion are coming soon. Past sessions will appear here."
         />
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={sessions.data}
           keyExtractor={(s) => String(s.id)}
           contentContainerStyle={styles.list}

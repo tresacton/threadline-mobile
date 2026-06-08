@@ -50,7 +50,7 @@ export default function PeriodsScreen() {
       ) : !periods.data || periods.data.length === 0 ? (
         <EmptyState title="No life periods yet" body="Periods anchor fuzzy memories in time." />
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={periods.data}
           keyExtractor={(p) => String(p.id)}
           contentContainerStyle={styles.list}

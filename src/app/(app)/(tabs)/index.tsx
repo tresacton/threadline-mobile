@@ -27,9 +27,10 @@ export default function HomeScreen() {
   if (settings.isLoading) return <LoadingView />;
 
   return (
-    <ScrollView
+    <ScrollView contentInsetAdjustmentBehavior="never"
       style={{ backgroundColor: theme.background }}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.four }]}
+     
     >
       <Text style={[styles.hello, { color: theme.text }]}>Hello{user?.display_name ? `, ${user.display_name}` : ''}.</Text>
       <Text style={[styles.sub, { color: theme.textSecondary }]}>

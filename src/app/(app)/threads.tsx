@@ -24,7 +24,7 @@ export default function ThreadsScreen() {
       ) : !threads.data || threads.data.length === 0 ? (
         <EmptyState title="No open threads" body="Loose ends the companion notices will appear here — nothing to revisit right now." />
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={threads.data}
           keyExtractor={(t) => String(t.id)}
           contentContainerStyle={styles.list}

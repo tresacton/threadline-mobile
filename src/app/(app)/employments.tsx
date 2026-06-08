@@ -53,7 +53,7 @@ export default function EmploymentsScreen() {
       ) : !employments.data || employments.data.length === 0 ? (
         <EmptyState title="No jobs yet" body="Add jobs, or use Find past jobs to scan your memories." />
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={employments.data}
           keyExtractor={(e) => String(e.id)}
           contentContainerStyle={styles.list}

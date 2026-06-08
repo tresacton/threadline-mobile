@@ -53,7 +53,7 @@ export default function PlacesScreen() {
       ) : !places.data || places.data.length === 0 ? (
         <EmptyState title="No places yet" body="Add the places your memories happened." />
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={places.data}
           keyExtractor={(p) => String(p.id)}
           contentContainerStyle={styles.list}

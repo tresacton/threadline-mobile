@@ -59,7 +59,7 @@ export default function MemoriesScreen() {
           body={searching ? 'Try different words.' : 'Tap + to capture your first memory.'}
         />
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={list}
           keyExtractor={(m) => String(m.id)}
           contentContainerStyle={styles.listContent}

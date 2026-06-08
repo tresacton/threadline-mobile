@@ -24,7 +24,7 @@ export default function DevicesScreen() {
       ) : !devices.data || devices.data.length === 0 ? (
         <EmptyState title="No active sessions" />
       ) : (
-        <FlatList
+        <FlatList contentInsetAdjustmentBehavior="never"
           data={devices.data}
           keyExtractor={(d) => String(d.id)}
           contentContainerStyle={styles.list}

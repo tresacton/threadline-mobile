@@ -19,9 +19,17 @@ export default function EnrichScreen() {
   const memoryId = Number(id);
 
   const data = useQuery({ queryKey: ['enrichment', memoryId], queryFn: () => Enrichment.list(memoryId) });
+  const refreshEnrichment = () => {
+    qc.invalidateQueries({ queryKey: ['enrichment', memoryId] });
+    // The memory detail now carries answered enrichments inline — refresh it too so
+    // a reflection added here shows up there immediately (its query is otherwise
+    // fresh for staleTime and wouldn't refetch on return).
+    qc.invalidateQueries({ queryKey: ['memory', memoryId] });
+  };
+
   const generate = useMutation({
     mutationFn: () => Enrichment.generate(memoryId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['enrichment', memoryId] }),
+    onSuccess: refreshEnrichment,
     onError: (e) => humanizeError(e),
   });
 
@@ -32,7 +40,7 @@ export default function EnrichScreen() {
   const answered = data.data?.answered ?? [];
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="never" style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
+    <ScrollView contentInsetAdjustmentBehavior="never" automaticallyAdjustKeyboardInsets style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ headerShown: true, title: 'Add detail' }} />
       <Text style={[styles.lead, { color: theme.textSecondary }]}>
         Gentle, open questions to sit with — answer in your own words, skip any that don’t fit.
@@ -71,13 +79,17 @@ function QuestionCard({ question, memoryId }: { question: MemoryEnrichment; memo
   const qc = useQueryClient();
   const [response, setResponse] = useState('');
 
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ['enrichment', memoryId] });
+    qc.invalidateQueries({ queryKey: ['memory', memoryId] }); // inline answered enrichments on the detail screen
+  };
   const answer = useMutation({
     mutationFn: () => Enrichment.answer(question.id, response.trim()),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['enrichment', memoryId] }),
+    onSuccess: refresh,
   });
   const skip = useMutation({
     mutationFn: () => Enrichment.skip(question.id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['enrichment', memoryId] }),
+    onSuccess: refresh,
   });
 
   return (

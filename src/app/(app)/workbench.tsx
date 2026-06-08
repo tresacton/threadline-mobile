@@ -25,7 +25,7 @@ export default function WorkbenchScreen() {
     .filter((n) => Number.isFinite(n) && n > 0);
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="never" style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
+    <ScrollView contentInsetAdjustmentBehavior="never" automaticallyAdjustKeyboardInsets style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ headerShown: true, title: 'Workbench' }} />
       {memoryIds.length === 0 ? (
         <EmptyState title="Nothing selected" body="Pick a few memories to edit them together." />

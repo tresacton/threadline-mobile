@@ -48,7 +48,7 @@ export default function JobsScreen() {
   if (state.error) return <ErrorView error={state.error} onRetry={() => state.refetch()} />;
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="never" style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
+    <ScrollView contentInsetAdjustmentBehavior="never" automaticallyAdjustKeyboardInsets style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ headerShown: true, title: 'Find past jobs' }} />
       <Text style={[styles.lead, { color: theme.textSecondary }]}>
         The companion can scan your memories for jobs you’ve mentioned but not recorded. You confirm the

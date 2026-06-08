@@ -1,11 +1,4 @@
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  View,
-  type ViewStyle,
-} from 'react-native';
+import { ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -24,38 +17,43 @@ export function Screen({ children, scroll = false, padded = true, contentStyle }
   const theme = useTheme();
   const insets = useSafeAreaInsets();
 
-  const inner = (
-    <View
-      style={[
-        styles.column,
-        padded && styles.padded,
-        { paddingBottom: insets.bottom + Spacing.four },
-        contentStyle,
-      ]}
-    >
-      {children}
-    </View>
-  );
+  // flex:1 only fills the viewport for the non-scroll case. Inside a ScrollView
+  // it inflates the measured content height and leaves overscroll dead space, so
+  // the scrolling column sizes to its content instead.
+  const column = [
+    styles.column,
+    scroll ? null : styles.columnFill,
+    padded && styles.padded,
+    { paddingBottom: insets.bottom + Spacing.four },
+    contentStyle,
+  ];
 
   if (scroll) {
     return (
-      <KeyboardAvoidingView
+      <ScrollView
         style={[styles.flex, { backgroundColor: theme.background }]}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        contentInsetAdjustmentBehavior="never"
+        automaticallyAdjustKeyboardInsets
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        contentContainerStyle={styles.scrollContent}
       >
-        <ScrollView contentInsetAdjustmentBehavior="never" contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-          {inner}
-        </ScrollView>
-      </KeyboardAvoidingView>
+        <View style={column}>{children}</View>
+      </ScrollView>
     );
   }
 
-  return <View style={[styles.flex, { backgroundColor: theme.background }]}>{inner}</View>;
+  return (
+    <View style={[styles.flex, { backgroundColor: theme.background }]}>
+      <View style={column}>{children}</View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   scrollContent: { flexGrow: 1, alignItems: 'center' },
-  column: { flex: 1, width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center' },
+  column: { width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center' },
+  columnFill: { flex: 1 },
   padded: { paddingHorizontal: Spacing.four, paddingTop: Spacing.four },
 });

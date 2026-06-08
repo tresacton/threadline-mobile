@@ -25,6 +25,20 @@ export default function ReviewCaptureScreen() {
     queryFn: () => Captures.candidates(captureId),
   });
 
+  // Drive the pull-to-refresh control from an explicit user-pull flag only.
+  // Binding it to `candidates.isFetching` would keep the spinner's space open
+  // during the initial load and the background split-polling below, leaving
+  // dead space at the top that never snaps back.
+  const [refreshing, setRefreshing] = useState(false);
+  const onPullToRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await candidates.refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const invalidateMemories = () => qc.invalidateQueries({ queryKey: ['memories'] });
 
   const keepOne = useMutation({
@@ -69,14 +83,11 @@ export default function ReviewCaptureScreen() {
   return (
     <ScrollView
       contentInsetAdjustmentBehavior="never"
+      automaticallyAdjustKeyboardInsets
       style={{ backgroundColor: theme.background }}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl
-          refreshing={candidates.isFetching}
-          onRefresh={() => candidates.refetch()}
-          tintColor={theme.textMuted}
-        />
+        <RefreshControl refreshing={refreshing} onRefresh={onPullToRefresh} tintColor={theme.textMuted} />
       }
     >
       <Stack.Screen options={{ headerShown: true, title: 'Review' }} />

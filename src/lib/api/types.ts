@@ -54,6 +54,9 @@ export interface Memory {
   people: string[];
   places: string[];
   life_periods: string[];
+  // The user's own words added by enriching this memory (answered only), surfaced
+  // inline so the detail screen shows them without a second request.
+  enrichments: MemoryEnrichment[];
   created_at: string;
   updated_at: string;
 }

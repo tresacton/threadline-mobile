@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { Enrichment, Memories, OpenThreads } from '@/lib/api/endpoints';
+import { Memories, OpenThreads } from '@/lib/api/endpoints';
 
 const titleize = (slug?: string | null) =>
   slug ? slug.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : null;
@@ -21,7 +21,6 @@ export default function MemoryDetailScreen() {
   const memory = useQuery({ queryKey: ['memory', memoryId], queryFn: () => Memories.get(memoryId) });
   const related = useQuery({ queryKey: ['memory', memoryId, 'related'], queryFn: () => Memories.related(memoryId) });
   const threads = useQuery({ queryKey: ['threads', memoryId], queryFn: () => OpenThreads.list(memoryId) });
-  const enrich = useQuery({ queryKey: ['enrichments', memoryId], queryFn: () => Enrichment.list(memoryId) });
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ['memory', memoryId] });
 
@@ -71,7 +70,7 @@ export default function MemoryDetailScreen() {
   const m = memory.data;
   const isSensitive = m.sensitivity && m.sensitivity !== 'normal';
   const openThreads = (threads.data ?? []).filter((t) => t.status !== 'resolved');
-  const answered = enrich.data?.answered ?? [];
+  const answered = (m.enrichments ?? []).filter((e) => e.status === 'answered');
   const relatedList = related.data ?? [];
 
   const meta: { label: string; value: string | null }[] = [

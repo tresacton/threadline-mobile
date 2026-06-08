@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 
@@ -64,15 +64,10 @@ export default function GoalsScreen() {
 
 function GoalRow({ goal }: { goal: Goal }) {
   const theme = useTheme();
-  const qc = useQueryClient();
-  const close = useMutation({
-    mutationFn: () => Goals.close(goal.id, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['goals'] }),
-  });
   const closed = goal.status === 'closed';
 
   return (
-    <Card style={styles.row}>
+    <Card style={styles.row} onPress={() => router.push(`/goal/${goal.id}`)}>
       <View style={styles.rowMain}>
         <Text style={[styles.title, { color: theme.text }]}>{goal.title}</Text>
         <View style={[styles.badge, { backgroundColor: closed ? theme.backgroundElement : theme.success }]}>
@@ -80,9 +75,6 @@ function GoalRow({ goal }: { goal: Goal }) {
         </View>
       </View>
       {goal.description ? <Text style={[styles.desc, { color: theme.textSecondary }]}>{goal.description}</Text> : null}
-      {!closed ? (
-        <Button label="Mark complete" variant="ghost" fullWidth={false} onPress={() => close.mutate()} loading={close.isPending} />
-      ) : null}
     </Card>
   );
 }

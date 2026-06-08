@@ -1,16 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { Alert, StyleSheet, Text } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { TextField } from '@/components/ui/TextField';
 import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { People } from '@/lib/api/endpoints';
 
 export default function EditPersonScreen() {
+  const theme = useTheme();
   const qc = useQueryClient();
   const { id } = useLocalSearchParams<{ id: string }>();
   const personId = Number(id);
@@ -66,6 +68,12 @@ export default function EditPersonScreen() {
       <TextField label="Name" value={name} onChangeText={setName} />
       <TextField label="Relationship" value={relationship} onChangeText={setRelationship} placeholder="e.g. sister" />
       <TextField label="Notes" value={notes} onChangeText={setNotes} placeholder="Anything to remember" multiline style={styles.area} />
+      {person.data.memory_count != null ? (
+        <Text style={{ color: theme.textMuted }}>
+          In {person.data.memory_count} {person.data.memory_count === 1 ? 'memory' : 'memories'}
+        </Text>
+      ) : null}
+      <Button label="View connections" variant="secondary" onPress={() => router.push(`/graph/person/${personId}`)} />
       <Button label="Save" onPress={() => save.mutate()} loading={save.isPending} />
       <Button label="Delete person" variant="danger" onPress={confirmDelete} loading={remove.isPending} />
     </Screen>

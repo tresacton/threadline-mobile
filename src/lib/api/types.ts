@@ -384,3 +384,15 @@ export interface GraphData {
   edges: GraphEdge[];
   truncated: boolean;
 }
+
+export interface EgoGraph {
+  center: GraphNode | null;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  depth: number;
+  first_degree_count: number;
+  node_count: number;
+  truncated: boolean;
+  first_degree_overflow: boolean;
+  max_nodes: number;
+}

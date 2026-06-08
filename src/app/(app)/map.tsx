@@ -17,15 +17,11 @@ const ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   life_period: 'time-outline',
 };
 
-// "person:123" -> the matching mobile edit route.
+// "person:123" -> the interactive ego-graph route for that node.
 function routeFor(node: GraphNode): string | null {
   const localId = node.id.split(':')[1];
   if (!localId) return null;
-  if (node.type === 'person') return `/person/${localId}`;
-  if (node.type === 'place') return `/place/${localId}`;
-  if (node.type === 'life_period') return `/period/${localId}`;
-  if (node.type === 'memory') return `/memory/${localId}`;
-  return null;
+  return `/graph/${node.type}/${localId}`;
 }
 
 export default function MapScreen() {
@@ -59,8 +55,9 @@ export default function MapScreen() {
           contentContainerStyle={styles.list}
           ListHeaderComponent={
             <Text style={[styles.intro, { color: theme.textMuted }]}>
-              People, places and periods across your memories — most connected first.
-              {graph.data?.truncated ? ' (showing the busiest.)' : ''}
+              People, places and periods across your memories — most connected first. Tap one to explore its
+              connection graph.
+              {graph.data?.truncated ? ' (Showing the busiest.)' : ''}
             </Text>
           }
           renderItem={({ item }) => {

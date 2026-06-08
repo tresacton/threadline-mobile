@@ -76,6 +76,7 @@ export default function MemoryDetailScreen() {
 
       <View style={styles.actions}>
         <ActionRow icon="create-outline" label="Edit memory" onPress={() => router.push(`/edit-memory/${memoryId}`)} />
+        <ActionRow icon="git-network-outline" label="View connections" onPress={() => router.push(`/graph/memory/${memoryId}`)} />
         <ActionRow icon="sparkles-outline" label="Summarise with AI" onPress={() => summarise.mutate()} />
         <ActionRow icon="time-outline" label="Reconstruct the date" onPress={() => router.push(`/reconstruct/${memoryId}`)} />
         <ActionRow icon="bulb-outline" label="Add detail (enrich)" onPress={() => router.push(`/enrich/${memoryId}`)} />

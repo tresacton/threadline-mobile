@@ -6,6 +6,7 @@ import type {
   DateSuggestion,
   Device,
   Employment,
+  EgoGraph,
   Entitlement,
   Goal,
   GoalProgress,
@@ -279,4 +280,5 @@ export const Voice = {
 
 export const Graph = {
   get: () => api.get<GraphData>('/graph'),
+  ego: (centerId: string) => api.get<EgoGraph>('/graph', { center: centerId }),
 };

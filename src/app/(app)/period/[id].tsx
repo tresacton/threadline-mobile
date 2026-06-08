@@ -72,6 +72,7 @@ export default function EditPeriodScreen() {
       <TextField label="Description" value={description} onChangeText={setDescription} multiline style={styles.area} />
       <TextField label="Start (YYYY-MM-DD)" value={start} onChangeText={setStart} placeholder="2018-01-01" autoCapitalize="none" />
       <TextField label="End (YYYY-MM-DD)" value={end} onChangeText={setEnd} placeholder="2021-12-31" autoCapitalize="none" />
+      <Button label="View connections" variant="secondary" onPress={() => router.push(`/graph/life_period/${periodId}`)} />
       <Button label="Save" onPress={() => save.mutate()} loading={save.isPending} />
       <Button label="Delete period" variant="danger" onPress={confirmDelete} loading={remove.isPending} />
     </Screen>

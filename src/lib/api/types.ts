@@ -228,6 +228,7 @@ export interface JobCandidate {
   free_question: string | null;
   status: string;
   source_memory_id: number | null;
+  source_memory_title: string | null;
   created_employment_id: number | null;
 }
 

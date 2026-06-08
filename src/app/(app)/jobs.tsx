@@ -1,7 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -73,6 +74,18 @@ export default function JobsScreen() {
           {candidate.evidence ? (
             <Text style={[styles.evidence, { color: theme.textSecondary }]}>“{candidate.evidence}”</Text>
           ) : null}
+          {candidate.source_memory_id ? (
+            <Pressable
+              onPress={() => router.push(`/memory/${candidate.source_memory_id}`)}
+              style={styles.sourceLink}
+            >
+              <Ionicons name="document-text-outline" size={16} color={theme.primary} />
+              <Text style={[styles.sourceLinkText, { color: theme.primary }]} numberOfLines={1}>
+                From: {candidate.source_memory_title || 'view the memory'}
+              </Text>
+              <Ionicons name="chevron-forward" size={15} color={theme.primary} />
+            </Pressable>
+          ) : null}
           <TextField label="Employer" value={employer} onChangeText={setEmployer} placeholder="Employer" />
           <TextField label="Role" value={title} onChangeText={setTitle} placeholder="Title (optional)" />
           {candidate.free_question ? (
@@ -99,6 +112,8 @@ const styles = StyleSheet.create({
   progress: { fontSize: 13, textAlign: 'center' },
   card: { gap: Spacing.three },
   evidence: { fontSize: 15, fontStyle: 'italic', lineHeight: 21 },
+  sourceLink: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  sourceLinkText: { flex: 1, fontSize: 14, fontWeight: '600' },
   question: { fontSize: 15, lineHeight: 21 },
   actions: { gap: Spacing.two, marginTop: Spacing.two },
 });

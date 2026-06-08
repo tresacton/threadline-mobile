@@ -40,9 +40,12 @@ export interface Memory {
   date_label: string | null;
   date_precision: string | null;
   date_confidence: string | null;
+  occurred_on: string | null;
   status: string;
   sensitivity: string;
   category: string | null;
+  emotional_valence: string | null;
+  importance: number | null;
   exclude_from_voice_context: boolean;
   ai_summary: string | null;
   ai_summary_generated_at: string | null;
@@ -63,12 +66,35 @@ export interface TimelineMemory {
   sensitivity: string | null;
 }
 
+// Compact memory reference used wherever a screen lists related/linked memories.
+export interface MemoryRefLite {
+  id: number;
+  title: string | null;
+  date_label: string | null;
+}
+
+export interface LinkedPlace {
+  id: number; // the person_place join id (used to unlink)
+  place_id: number;
+  place_name: string | null;
+  relationship_label: string | null;
+}
+
+export interface ConnectedPerson {
+  id: number; // the person id
+  name: string | null;
+  relationship_label: string | null;
+}
+
 export interface Person {
   id: number;
   name: string;
   relationship_label?: string | null;
   notes?: string | null;
   memory_count?: number;
+  // Present on show (person_detail) only.
+  linked_places?: LinkedPlace[];
+  memories?: MemoryRefLite[];
 }
 
 export interface Place {
@@ -77,9 +103,15 @@ export interface Place {
   city?: string | null;
   region?: string | null;
   country?: string | null;
+  address_freeform?: string | null;
   place_type?: string | null;
   notes?: string | null;
+  residence?: boolean;
   memory_count?: number;
+  // Present on show (place_detail) only.
+  connected_people?: ConnectedPerson[];
+  life_periods?: { id: number; name: string }[];
+  memories?: MemoryRefLite[];
 }
 
 export interface LifePeriod {
@@ -88,8 +120,35 @@ export interface LifePeriod {
   description?: string | null;
   date_range_start: string | null;
   date_range_end: string | null;
+  date_confidence?: string | null;
   place_id: number | null;
+  place_name?: string | null;
   memory_count?: number;
+  // Present on show (life_period_detail) only.
+  memories?: MemoryRefLite[];
+}
+
+// DB-backed reference option for preference pickers (onboarding + settings).
+export interface OptionItem {
+  id: number;
+  slug: string;
+  name: string;
+}
+
+export interface ReferenceOptions {
+  companion_styles: OptionItem[];
+  notification_frequencies: OptionItem[];
+  help_focuses: OptionItem[];
+  voice_call_modes: OptionItem[];
+}
+
+export interface TranscriptSegment {
+  id: number;
+  speaker: string | null;
+  content: string;
+  mode: string | null;
+  promoted: boolean;
+  source_capture_id: number | null;
 }
 
 export interface Tag {
@@ -327,6 +386,7 @@ export interface UserSettings {
   companion_style_id: number | null;
   notification_frequency_id: number | null;
   default_voice_call_mode_id: number | null;
+  help_focus_id: number | null;
   onboarded: boolean;
 }
 

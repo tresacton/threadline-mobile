@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { AppState } from 'react-native';
 
 import { api } from '../api/client';
+import { Auth } from '../api/endpoints';
 import type { AuthUser, LoginResponse } from '../api/types';
 import * as biometric from './biometric';
 import * as sessionStore from './sessionStore';
@@ -16,6 +17,7 @@ interface AuthContextValue {
   biometricAvailable: boolean; // whether this device supports it
   biometricLabel: string; // "Face ID" / "Touch ID" / "biometrics"
   login: (email: string, password: string, deviceName?: string) => Promise<void>;
+  register: (email: string, password: string, passwordConfirmation: string) => Promise<void>;
   logout: () => Promise<void>;
   unlock: () => Promise<boolean>;
   lockNow: () => void;
@@ -135,6 +137,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setStatus('signedIn');
   }, []);
 
+  // Signup mints the same token pair as login and signs the user straight in;
+  // the onboarding wizard then runs (gated on the fresh account's onboarded flag).
+  const register = useCallback(async (email: string, password: string, passwordConfirmation: string) => {
+    const res = await Auth.register(email, password, passwordConfirmation);
+    await sessionStore.setSession(res);
+    await storage.saveSessionMeta({ user: res.user });
+    setUser(res.user);
+    setStatus('signedIn');
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await api.delete('/session');
@@ -165,12 +177,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       biometricAvailable,
       biometricLabel,
       login,
+      register,
       logout,
       unlock,
       lockNow,
       setBiometricEnabled,
     }),
-    [status, user, biometricEnabled, biometricAvailable, biometricLabel, login, logout, unlock, lockNow, setBiometricEnabled],
+    [status, user, biometricEnabled, biometricAvailable, biometricLabel, login, register, logout, unlock, lockNow, setBiometricEnabled],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

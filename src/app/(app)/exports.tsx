@@ -22,9 +22,26 @@ const FORMAT_LABELS: Record<string, string> = {
   csv: 'Spreadsheet (CSV)',
 };
 
+interface ExportRecord {
+  id: number;
+  export_type: string | null;
+  status: string | null;
+  byte_size: number | null;
+  created_at: string | null;
+  completed_at: string | null;
+}
+
 interface ExportsPayload {
   export_types: string[];
+  exports: ExportRecord[];
 }
+
+const humanSize = (bytes: number | null) => {
+  if (bytes == null) return '—';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+};
 
 export default function ExportsScreen() {
   const theme = useTheme();
@@ -82,6 +99,27 @@ export default function ExportsScreen() {
               />
             </Card>
           ))}
+
+          {(exportsQ.data?.exports ?? []).length > 0 ? (
+            <View style={styles.history}>
+              <Text style={[styles.historyLabel, { color: theme.textSecondary }]}>Export history</Text>
+              {(exportsQ.data?.exports ?? []).map((e) => (
+                <Card key={e.id} style={styles.historyRow}>
+                  <View style={styles.flex}>
+                    <Text style={[styles.format, { color: theme.text }]}>
+                      {FORMAT_LABELS[e.export_type ?? ''] ?? e.export_type}
+                    </Text>
+                    <Text style={[styles.historyMeta, { color: theme.textMuted }]}>
+                      {e.status ?? '—'} · {humanSize(e.byte_size)} ·{' '}
+                      {e.completed_at || e.created_at
+                        ? new Date((e.completed_at || e.created_at) as string).toLocaleDateString()
+                        : '—'}
+                    </Text>
+                  </View>
+                </Card>
+              ))}
+            </View>
+          ) : null}
         </View>
       )}
     </Screen>
@@ -93,4 +131,9 @@ const styles = StyleSheet.create({
   list: { gap: Spacing.three },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.three },
   format: { fontSize: 15, flex: 1 },
+  flex: { flex: 1 },
+  history: { gap: Spacing.three, marginTop: Spacing.five },
+  historyLabel: { fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  historyRow: { flexDirection: 'row', alignItems: 'center' },
+  historyMeta: { fontSize: 13, marginTop: 2 },
 });

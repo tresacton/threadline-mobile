@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -29,6 +29,26 @@ export default function ReconstructScreen() {
   const suggest = useMutation<DateSuggestion>({ mutationFn: () => Memories.suggestDate(memoryId) });
 
   const refresh = () => qc.invalidateQueries({ queryKey: ['reconstruct', memoryId] });
+
+  // Apply the AI suggestion to the memory itself — nothing changes until the user
+  // taps this. Writes the fuzzy label, inferred range, and confidence back.
+  const apply = useMutation({
+    mutationFn: (s: DateSuggestion) =>
+      Memories.update(memoryId, {
+        fuzzy_date_label: s.fuzzy_date_label ?? undefined,
+        date_range_start: s.range_start ?? undefined,
+        date_range_end: s.range_end ?? undefined,
+        date_confidence_slug: s.confidence ?? undefined,
+      } as Record<string, unknown>),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['memory', memoryId] });
+      qc.invalidateQueries({ queryKey: ['memories'] });
+      Alert.alert('Date applied', 'The memory’s date was updated.', [
+        { text: 'OK', onPress: () => router.back() },
+      ]);
+    },
+    onError: (e) => Alert.alert('Could not apply', humanizeError(e)),
+  });
 
   const addRelation = useMutation({
     mutationFn: () => Memories.addRelation(memoryId, otherId!, relType),
@@ -124,9 +144,18 @@ export default function ReconstructScreen() {
           {suggest.data.fuzzy_date_label ? (
             <Text style={[styles.value, { color: theme.text }]}>{suggest.data.fuzzy_date_label}</Text>
           ) : null}
+          {suggest.data.confidence ? (
+            <Text style={[styles.hint, { color: theme.textMuted }]}>Confidence: {suggest.data.confidence}</Text>
+          ) : null}
           {suggest.data.reasoning ? (
             <Text style={[styles.reasoning, { color: theme.textSecondary }]}>{suggest.data.reasoning}</Text>
           ) : null}
+          <Button
+            label="Apply this date"
+            onPress={() => apply.mutate(suggest.data!)}
+            loading={apply.isPending}
+            style={{ marginTop: Spacing.three }}
+          />
         </Card>
       ) : null}
       {suggest.error ? <Text style={{ color: theme.danger }}>{humanizeError(suggest.error)}</Text> : null}

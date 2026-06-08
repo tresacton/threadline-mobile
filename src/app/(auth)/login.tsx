@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -69,6 +70,12 @@ export default function LoginScreen() {
           returnKeyType="go"
         />
         <Button label="Sign in" onPress={onSubmit} loading={submitting} />
+        <Link href="/(auth)/forgot-password" style={[styles.link, { color: theme.primary }]}>
+          Forgot your password?
+        </Link>
+        <Link href="/(auth)/signup" style={[styles.link, { color: theme.primary }]}>
+          New here? Create an account
+        </Link>
       </View>
     </Screen>
   );
@@ -79,4 +86,5 @@ const styles = StyleSheet.create({
   brand: { fontSize: 36, fontWeight: '700', letterSpacing: 0.5 },
   tagline: { fontSize: 16 },
   form: { gap: Spacing.four },
+  link: { fontSize: 15, textAlign: 'center', paddingVertical: Spacing.one },
 });

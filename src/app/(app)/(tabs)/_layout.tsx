@@ -1,10 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
+import { Redirect, Tabs } from 'expo-router';
 
 import { useTheme } from '@/hooks/use-theme';
+import { Settings } from '@/lib/api/endpoints';
 
 export default function TabsLayout() {
   const theme = useTheme();
+  // First-run gate: a signed-in account that hasn't completed onboarding is sent
+  // to the wizard. We don't block the tabs on the network — only redirect once
+  // settings resolve and report not-yet-onboarded.
+  const settings = useQuery({ queryKey: ['settings'], queryFn: Settings.get });
+  if (settings.data && !settings.data.settings.onboarded) {
+    return <Redirect href="/(app)/onboarding" />;
+  }
+
   return (
     <Tabs
       screenOptions={{

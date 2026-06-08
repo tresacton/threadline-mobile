@@ -9,7 +9,13 @@ import { Select } from '@/components/ui/Select';
 import { TextField } from '@/components/ui/TextField';
 import { TokenInput } from '@/components/ui/TokenInput';
 import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
-import { CATEGORY_OPTIONS, DATE_CONFIDENCE_OPTIONS, SENSITIVITY_OPTIONS } from '@/constants/options';
+import {
+  CATEGORY_OPTIONS,
+  DATE_CONFIDENCE_OPTIONS,
+  DATE_PRECISION_OPTIONS,
+  SENSITIVITY_OPTIONS,
+  VALENCE_OPTIONS,
+} from '@/constants/options';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { LifePeriods, Memories, People, Places, Tags } from '@/lib/api/endpoints';
@@ -30,9 +36,13 @@ export default function EditMemoryScreen() {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [dateLabel, setDateLabel] = useState('');
+  const [exactDate, setExactDate] = useState('');
   const [sensitivity, setSensitivity] = useState<string | null>(null);
   const [category, setCategory] = useState<string | null>(null);
   const [dateConfidence, setDateConfidence] = useState<string | null>(null);
+  const [datePrecision, setDatePrecision] = useState<string | null>(null);
+  const [valence, setValence] = useState<string | null>(null);
+  const [importance, setImportance] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [people, setPeople] = useState<string[]>([]);
   const [places, setPlaces] = useState<string[]>([]);
@@ -44,9 +54,13 @@ export default function EditMemoryScreen() {
     setTitle(m.title ?? '');
     setBody(m.structured_body ?? '');
     setDateLabel(m.date_label ?? '');
+    setExactDate(m.occurred_on ?? '');
     setSensitivity(m.sensitivity ?? null);
     setCategory(m.category ?? null);
     setDateConfidence(m.date_confidence ?? null);
+    setDatePrecision(m.date_precision ?? null);
+    setValence(m.emotional_valence ?? null);
+    setImportance(m.importance != null ? String(m.importance) : '');
     setTags(m.tags);
     setPeople(m.people);
     setPlaces(m.places);
@@ -59,9 +73,13 @@ export default function EditMemoryScreen() {
         title: title.trim(),
         structured_body: body.trim(),
         fuzzy_date_label: dateLabel.trim(),
+        occurred_on: exactDate.trim() || null,
         sensitivity_slug: sensitivity ?? undefined,
         memory_category_slug: category ?? undefined,
         date_confidence_slug: dateConfidence ?? undefined,
+        date_precision_slug: datePrecision ?? undefined,
+        emotional_valence_slug: valence ?? undefined,
+        importance: importance ? Number(importance) : null,
         // The API splits these on commas/newlines into names.
         tag_names: tags.join('\n'),
         person_names: people.join('\n'),
@@ -97,9 +115,25 @@ export default function EditMemoryScreen() {
         onChangeText={setDateLabel}
         placeholder="Around 2014"
       />
-      <Select label="Sensitivity" value={sensitivity} options={SENSITIVITY_OPTIONS} onChange={setSensitivity} />
-      <Select label="Category" value={category} options={CATEGORY_OPTIONS} onChange={setCategory} />
+      <TextField
+        label="Exact date (if known)"
+        value={exactDate}
+        onChangeText={setExactDate}
+        placeholder="YYYY-MM-DD"
+        autoCapitalize="none"
+      />
+      <Select label="Date precision" value={datePrecision} options={DATE_PRECISION_OPTIONS} onChange={setDatePrecision} />
       <Select label="Date confidence" value={dateConfidence} options={DATE_CONFIDENCE_OPTIONS} onChange={setDateConfidence} />
+      <Select label="How did it feel?" value={valence} options={VALENCE_OPTIONS} onChange={setValence} />
+      <TextField
+        label="Importance (1–5)"
+        value={importance}
+        onChangeText={setImportance}
+        placeholder="1–5"
+        keyboardType="number-pad"
+      />
+      <Select label="Category" value={category} options={CATEGORY_OPTIONS} onChange={setCategory} />
+      <Select label="Sensitivity" value={sensitivity} options={SENSITIVITY_OPTIONS} onChange={setSensitivity} />
       <TokenInput
         label="People"
         value={people}

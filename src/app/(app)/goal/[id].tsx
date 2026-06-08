@@ -1,14 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Picker } from '@/components/ui/Picker';
 import { TextField } from '@/components/ui/TextField';
 import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { Goals, Memories } from '@/lib/api/endpoints';
 
@@ -24,11 +24,16 @@ export default function GoalDetailScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [outcome, setOutcome] = useState('');
+  const [scoreYes, setScoreYes] = useState(false);
+  const [scorePercent, setScorePercent] = useState('');
 
   useEffect(() => {
     if (!goalQ.data) return;
-    setTitle(goalQ.data.goal.title);
-    setDescription(goalQ.data.goal.description ?? '');
+    const g = goalQ.data.goal;
+    setTitle(g.title);
+    setDescription(g.description ?? '');
+    setScoreYes(g.score_yes ?? false);
+    setScorePercent(g.score_percent != null ? String(g.score_percent) : '');
   }, [goalQ.data]);
 
   const invalidate = () => {
@@ -41,8 +46,29 @@ export default function GoalDetailScreen() {
     onSuccess: invalidate,
     onError: (e) => Alert.alert('Could not save', humanizeError(e)),
   });
+  const scoreMode = goalQ.data?.goal.scoring_mode;
+
+  const saveScore = useMutation({
+    mutationFn: () =>
+      Goals.update(
+        goalId,
+        scoreMode === 'yes_no'
+          ? ({ score_yes: scoreYes } as Record<string, unknown>)
+          : ({ score_percent: scorePercent ? Number(scorePercent) : null } as Record<string, unknown>),
+      ),
+    onSuccess: invalidate,
+    onError: (e) => Alert.alert('Could not save score', humanizeError(e)),
+  });
   const close = useMutation({
-    mutationFn: () => Goals.close(goalId, { outcome_comment: outcome.trim() || undefined }),
+    mutationFn: () =>
+      Goals.close(goalId, {
+        outcome_comment: outcome.trim() || undefined,
+        ...(scoreMode === 'yes_no'
+          ? { score_yes: scoreYes }
+          : scorePercent
+            ? { score_percent: Number(scorePercent) }
+            : {}),
+      }),
     onSuccess: invalidate,
   });
   const remove = useMutation({
@@ -81,6 +107,23 @@ export default function GoalDetailScreen() {
     <ScrollView contentInsetAdjustmentBehavior="never" style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
       <Stack.Screen options={{ headerShown: true, title: 'Goal' }} />
 
+      {goal.template || closed ? (
+        <View style={styles.badges}>
+          {goal.template ? (
+            <View style={[styles.badge, { backgroundColor: theme.backgroundElement }]}>
+              <Text style={[styles.badgeText, { color: theme.textSecondary }]}>Template</Text>
+            </View>
+          ) : null}
+          {closed ? (
+            <View style={[styles.badge, { backgroundColor: theme.backgroundElement }]}>
+              <Text style={[styles.badgeText, { color: theme.success }]}>
+                {goal.score_yes ? 'Met' : goal.score_percent != null ? `${goal.score_percent}%` : 'Closed'}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      ) : null}
+
       <TextField label="Title" value={title} onChangeText={setTitle} />
       <TextField label="Description" value={description} onChangeText={setDescription} multiline style={styles.area} />
       <Button label="Save" onPress={() => save.mutate()} loading={save.isPending} />
@@ -91,6 +134,27 @@ export default function GoalDetailScreen() {
           <Text style={[styles.progressValue, { color: theme.text }]}>
             {progress.percent}% · {progress.label}
           </Text>
+        </Card>
+      ) : null}
+
+      {!closed && scoreMode && scoreMode !== 'auto' ? (
+        <Card style={styles.score}>
+          <Text style={[styles.section, { color: theme.text }]}>Your score</Text>
+          {scoreMode === 'yes_no' ? (
+            <View style={styles.scoreRow}>
+              <Text style={[styles.scoreLabel, { color: theme.text }]}>Met</Text>
+              <Switch value={scoreYes} onValueChange={setScoreYes} />
+            </View>
+          ) : (
+            <TextField
+              label="Percent complete"
+              value={scorePercent}
+              onChangeText={setScorePercent}
+              keyboardType="number-pad"
+              placeholder="0–100"
+            />
+          )}
+          <Button label="Save score" variant="secondary" onPress={() => saveScore.mutate()} loading={saveScore.isPending} />
         </Card>
       ) : null}
 
@@ -151,4 +215,10 @@ const styles = StyleSheet.create({
   linkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   linkTitle: { flex: 1, fontSize: 15 },
   closeBox: { gap: Spacing.three },
+  badges: { flexDirection: 'row', gap: Spacing.two },
+  badge: { borderRadius: Radius.pill, paddingHorizontal: Spacing.three, paddingVertical: 4 },
+  badgeText: { fontSize: 12, fontWeight: '600' },
+  score: { gap: Spacing.three },
+  scoreRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  scoreLabel: { fontSize: 15, fontWeight: '500' },
 });

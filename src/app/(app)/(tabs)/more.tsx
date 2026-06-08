@@ -22,6 +22,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
       { icon: 'location-outline', label: 'Places', route: '/places' },
       { icon: 'calendar-outline', label: 'Life periods', route: '/periods' },
       { icon: 'time-outline', label: 'Timeline', route: '/timeline' },
+      { icon: 'construct-outline', label: 'Workbench', route: '/workbench' },
       { icon: 'git-network-outline', label: 'Map', route: '/map' },
       { icon: 'git-branch-outline', label: 'Open threads', route: '/threads' },
       { icon: 'notifications-outline', label: 'Notifications', route: '/notifications' },

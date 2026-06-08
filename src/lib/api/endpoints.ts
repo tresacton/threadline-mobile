@@ -13,12 +13,14 @@ import type {
   GraphData,
   JobCandidate,
   LifePeriod,
+  LoginResponse,
   Memory,
   MemoryEnrichment,
   MemoryRelation,
   OpenThread,
   Person,
   Place,
+  ReferenceOptions,
   Reflection,
   Residency,
   ScanEligibility,
@@ -26,10 +28,41 @@ import type {
   Tag,
   TemporalContext,
   TimelineMemory,
+  TranscriptSegment,
   Turn,
   UserSettings,
   VoiceSession,
 } from './types';
+
+// ---- Auth (signup + password reset; login/logout live in AuthContext) ----
+export const Auth = {
+  register: (email: string, password: string, passwordConfirmation: string, deviceName?: string) =>
+    api.post<LoginResponse>(
+      '/registration',
+      {
+        registration: {
+          email,
+          password,
+          password_confirmation: passwordConfirmation,
+          device_name: deviceName ?? 'Threadline mobile',
+        },
+      },
+      { noAuth: true },
+    ),
+  // Always resolves (202) regardless of whether the account exists.
+  requestPasswordReset: (email: string) =>
+    api.post<void>('/password', { password: { email } }, { noAuth: true }),
+};
+
+// ---- Onboarding + reference option lists ----
+export const Onboarding = {
+  complete: (user: Partial<UserSettings>) =>
+    api.patch<{ settings: UserSettings }>('/onboarding', { user }).then((r) => r.settings),
+};
+
+export const Options = {
+  get: () => api.get<ReferenceOptions>('/options'),
+};
 
 // ---- Memories ----
 export const Memories = {
@@ -76,6 +109,13 @@ export const People = {
   update: (id: number, person: Partial<Person>) =>
     api.patch<{ person: Person }>(`/people/${id}`, { person }).then((r) => r.person),
   remove: (id: number) => api.delete<void>(`/people/${id}`),
+  // Link/unlink a place (e.g. "lived here"); both return the refreshed person.
+  linkPlace: (personId: number, place_name: string, relationship_label?: string) =>
+    api
+      .post<{ person: Person }>(`/people/${personId}/person_places`, { place_name, relationship_label })
+      .then((r) => r.person),
+  unlinkPlace: (personId: number, linkId: number) =>
+    api.delete<{ person: Person }>(`/people/${personId}/person_places/${linkId}`).then((r) => r.person),
 };
 
 export const Places = {
@@ -86,10 +126,15 @@ export const Places = {
   update: (id: number, place: Partial<Place>) =>
     api.patch<{ place: Place }>(`/places/${id}`, { place }).then((r) => r.place),
   remove: (id: number) => api.delete<void>(`/places/${id}`),
+  // Fold this place into another (de-dup); returns the surviving target place.
+  merge: (id: number, target_id: number) =>
+    api.post<{ place: Place }>(`/places/${id}/merge`, { target_id }).then((r) => r.place),
 };
 
 export const LifePeriods = {
   list: () => api.get<{ life_periods: LifePeriod[] }>('/life_periods').then((r) => r.life_periods),
+  get: (id: number) =>
+    api.get<{ life_period: LifePeriod }>(`/life_periods/${id}`).then((r) => r.life_period),
   create: (life_period: Partial<LifePeriod>) =>
     api.post<{ life_period: LifePeriod }>('/life_periods', { life_period }).then((r) => r.life_period),
   update: (id: number, life_period: Partial<LifePeriod>) =>
@@ -107,6 +152,15 @@ export const OpenThreads = {
     api.get<{ open_threads: OpenThread[] }>('/open_threads', { memory_id: memoryId }).then((r) => r.open_threads),
   transition: (id: number, action: 'resolve' | 'keep' | 'snooze' | 'set_aside') =>
     api.post<{ open_thread: OpenThread }>(`/open_threads/${id}/${action}`).then((r) => r.open_thread),
+  // Opens a chat seeded to work through this thread; returns the conversation.
+  discuss: (id: number) =>
+    api.post<{ conversation: Conversation }>(`/open_threads/${id}/discuss`).then((r) => r.conversation),
+};
+
+// ---- Memory update proposals (AI enrichments surfaced from chat) ----
+export const MemoryUpdateProposals = {
+  apply: (id: number) => api.post<{ memory: Memory }>(`/memory_update_proposals/${id}/apply`).then((r) => r.memory),
+  dismiss: (id: number) => api.post<void>(`/memory_update_proposals/${id}/dismiss`),
 };
 
 // ---- Goals ----
@@ -205,6 +259,14 @@ export const Captures = {
 };
 
 export const Candidates = {
+  // Manually authored split — carve a memory out of the capture by hand.
+  create: (captureId: number, fields: Partial<CandidateSplitMemory>) =>
+    api
+      .post<{ candidate_split_memory: CandidateSplitMemory }>(
+        `/source_captures/${captureId}/candidate_split_memories`,
+        { candidate_split_memory: fields },
+      )
+      .then((r) => r.candidate_split_memory),
   update: (id: number, fields: Partial<CandidateSplitMemory>) =>
     api
       .patch<{ candidate_split_memory: CandidateSplitMemory }>(`/candidate_split_memories/${id}`, {
@@ -279,6 +341,12 @@ export const Reflections = {
 
 export const Voice = {
   list: () => api.get<{ voice_sessions: VoiceSession[] }>('/voice_sessions').then((r) => r.voice_sessions),
+  get: (id: number) =>
+    api.get<{ voice_session: VoiceSession; transcript_segments: TranscriptSegment[] }>(`/voice_sessions/${id}`),
+  promoteSegment: (sessionId: number, segmentId: number) =>
+    api
+      .post<{ source_capture: SourceCapture }>(`/voice_sessions/${sessionId}/segments/${segmentId}/promote`)
+      .then((r) => r.source_capture),
 };
 
 export const Graph = {

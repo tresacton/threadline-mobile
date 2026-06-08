@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Select } from '@/components/ui/Select';
+import { TextField } from '@/components/ui/TextField';
 import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -114,6 +117,8 @@ export default function ReviewCaptureScreen() {
         )}
       </View>
 
+      <ManualSplit captureId={captureId} onAdded={() => candidates.refetch()} />
+
       <Button label="Discard this draft" variant="danger" onPress={confirmDiscard} loading={discard.isPending} />
     </ScrollView>
   );
@@ -132,8 +137,19 @@ function CandidateCard({
   const qc = useQueryClient();
   const refresh = () => qc.invalidateQueries({ queryKey: ['capture', captureId, 'candidates'] });
 
+  // Which text becomes the memory's body: the AI-suggested wording, or the user's
+  // verbatim excerpt from the capture (mirrors the web body-source radio).
+  const hasExcerpt = !!candidate.source_excerpt;
+  const [bodySource, setBodySource] = useState<'ai' | 'verbatim'>('ai');
+
   const accept = useMutation({
-    mutationFn: () => Candidates.accept(candidate.id),
+    mutationFn: () =>
+      Candidates.accept(
+        candidate.id,
+        bodySource === 'verbatim' && candidate.source_excerpt
+          ? { suggested_body: candidate.source_excerpt }
+          : undefined,
+      ),
     onSuccess: () => {
       onChanged();
       refresh();
@@ -193,10 +209,67 @@ function CandidateCard({
         </View>
       ) : null}
 
+      {hasExcerpt ? (
+        <Select
+          label="Memory body"
+          value={bodySource}
+          options={[
+            { value: 'ai', label: 'AI wording' },
+            { value: 'verbatim', label: 'My exact words' },
+          ]}
+          onChange={(v) => setBodySource(v)}
+        />
+      ) : null}
+
       <View style={styles.candidateActions}>
         <Button label="Accept" fullWidth={false} onPress={() => accept.mutate()} loading={accept.isPending} />
         <Button label="Discard" variant="ghost" fullWidth={false} onPress={() => reject.mutate()} disabled={reject.isPending} />
       </View>
+    </Card>
+  );
+}
+
+// Manually carve a memory out of the capture when the AI split isn't quite right.
+function ManualSplit({ captureId, onAdded }: { captureId: number; onAdded: () => void }) {
+  const theme = useTheme();
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [when, setWhen] = useState('');
+
+  const add = useMutation({
+    mutationFn: () =>
+      Candidates.create(captureId, {
+        suggested_title: title.trim() || undefined,
+        suggested_body: body.trim(),
+        suggested_fuzzy_date_label: when.trim() || undefined,
+      }),
+    onSuccess: () => {
+      setTitle('');
+      setBody('');
+      setWhen('');
+      onAdded();
+    },
+    onError: (e) => Alert.alert('Could not add', humanizeError(e)),
+  });
+
+  return (
+    <Card style={styles.manual}>
+      <Text style={[styles.splitHeading, { color: theme.text }]}>Split manually</Text>
+      <Text style={[styles.splitHint, { color: theme.textMuted }]}>
+        Write a memory yourself — it joins the list above to accept.
+      </Text>
+      <TextField label="Title" value={title} onChangeText={setTitle} placeholder="A short name" />
+      <TextField label="Memory" value={body} onChangeText={setBody} multiline style={styles.manualArea} placeholder="What happened" />
+      <TextField label="When (optional)" value={when} onChangeText={setWhen} placeholder="Around 2014" />
+      <Button
+        label="Add this memory"
+        variant="secondary"
+        onPress={() => {
+          if (body.trim().length < 2) return Alert.alert('Write the memory first');
+          add.mutate();
+        }}
+        loading={add.isPending}
+      />
     </Card>
   );
 }
@@ -223,4 +296,6 @@ const styles = StyleSheet.create({
   uncertain: { gap: 2, marginTop: 2 },
   uncertainText: { fontSize: 13, lineHeight: 18 },
   candidateActions: { flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.one },
+  manual: { gap: Spacing.three },
+  manualArea: { minHeight: 80, textAlignVertical: 'top' },
 });

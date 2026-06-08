@@ -5,10 +5,11 @@ import { useTheme } from '@/hooks/use-theme';
 
 export interface CardProps extends ViewProps {
   onPress?: () => void;
+  onLongPress?: () => void;
   padded?: boolean;
 }
 
-export function Card({ children, onPress, padded = true, style, ...rest }: CardProps) {
+export function Card({ children, onPress, onLongPress, padded = true, style, ...rest }: CardProps) {
   const theme = useTheme();
   const cardStyle = [
     styles.card,
@@ -20,9 +21,14 @@ export function Card({ children, onPress, padded = true, style, ...rest }: CardP
   // When pressable, the layout style (width/flex from `style`) must live on the
   // outer Pressable — otherwise the Pressable shrinks to content and any width:%
   // is measured against a collapsed box.
-  if (onPress) {
+  if (onPress || onLongPress) {
     return (
-      <Pressable onPress={onPress} style={({ pressed }) => [cardStyle, { opacity: pressed ? 0.7 : 1 }]} {...rest}>
+      <Pressable
+        onPress={onPress}
+        onLongPress={onLongPress}
+        style={({ pressed }) => [cardStyle, { opacity: pressed ? 0.7 : 1 }]}
+        {...rest}
+      >
         {children}
       </Pressable>
     );

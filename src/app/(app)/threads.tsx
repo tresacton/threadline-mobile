@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { router, Stack } from 'expo-router';
+import { Alert, FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -44,7 +44,12 @@ function ThreadCard({ thread }: { thread: OpenThread }) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['open_threads'] }),
     onError: (e) => humanizeError(e),
   });
-  const busy = transition.isPending;
+  const discuss = useMutation({
+    mutationFn: () => OpenThreads.discuss(thread.id),
+    onSuccess: (conversation) => router.push(`/chat/${conversation.id}`),
+    onError: (e) => Alert.alert('Could not start a chat', humanizeError(e)),
+  });
+  const busy = transition.isPending || discuss.isPending;
 
   return (
     <Card style={styles.card}>
@@ -55,8 +60,9 @@ function ThreadCard({ thread }: { thread: OpenThread }) {
         </Text>
       ) : null}
       <View style={styles.actions}>
-        <Button label="Resolve" variant="primary" fullWidth={false} onPress={() => transition.mutate('resolve')} disabled={busy} />
-        <Button label="Snooze" variant="secondary" fullWidth={false} onPress={() => transition.mutate('snooze')} disabled={busy} />
+        <Button label="Talk it through" variant="primary" fullWidth={false} onPress={() => discuss.mutate()} disabled={busy} />
+        <Button label="Resolve" variant="secondary" fullWidth={false} onPress={() => transition.mutate('resolve')} disabled={busy} />
+        <Button label="Snooze" variant="ghost" fullWidth={false} onPress={() => transition.mutate('snooze')} disabled={busy} />
         <Button label="Leave it be" variant="ghost" fullWidth={false} onPress={() => transition.mutate('set_aside')} disabled={busy} />
       </View>
     </Card>

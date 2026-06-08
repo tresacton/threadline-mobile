@@ -41,6 +41,26 @@ export const GOAL_TEMPLATE_OPTIONS: SelectOption<string>[] = [
   { value: 'enrich_memories', label: 'Enrich my memories' },
 ];
 
+// How precisely the date is known (date_precision_level slugs).
+export const DATE_PRECISION_OPTIONS: SelectOption<string>[] = [
+  { value: 'exact_date', label: 'Exact date' },
+  { value: 'month', label: 'Month' },
+  { value: 'year', label: 'Year' },
+  { value: 'range', label: 'A range' },
+  { value: 'life_period', label: 'A life period' },
+  { value: 'unknown', label: 'Not sure' },
+];
+
+// How the memory felt (emotional_valence slugs).
+export const VALENCE_OPTIONS: SelectOption<string>[] = [
+  { value: 'very_negative', label: 'Very hard' },
+  { value: 'negative', label: 'Hard' },
+  { value: 'mixed', label: 'Mixed' },
+  { value: 'neutral', label: 'Neutral' },
+  { value: 'positive', label: 'Good' },
+  { value: 'very_positive', label: 'Wonderful' },
+];
+
 export const DATE_CONFIDENCE_OPTIONS: SelectOption<string>[] = [
   'certain',
   'likely',

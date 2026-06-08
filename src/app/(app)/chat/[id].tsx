@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
@@ -20,25 +20,16 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { ErrorView, LoadingView } from '@/components/ui/states';
+import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { Chat } from '@/lib/api/endpoints';
-import type { AiMessage, ConversationExtras } from '@/lib/api/types';
+import { Chat, MemoryUpdateProposals } from '@/lib/api/endpoints';
+import type { AiMessage, ConversationExtras, MemoryUpdateProposal } from '@/lib/api/types';
 
 const KEYBOARD_ACCESSORY_ID = 'chatComposerAccessory';
 
 function newClientToken(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-function hasReviewable(extras: ConversationExtras | null): boolean {
-  if (!extras) return false;
-  return (
-    !!extras.proposed_capture ||
-    extras.pending_candidates.length > 0 ||
-    extras.update_proposals.length > 0
-  );
 }
 
 export default function ConversationScreen() {
@@ -148,7 +139,13 @@ export default function ConversationScreen() {
           renderItem={({ item }) => <Bubble message={item} onLongPress={() => copyMessage(item.content)} />}
         />
 
-        {hasReviewable(extras) ? <ReviewBanner extras={extras!} conversationId={conversationId} /> : null}
+        {extras && (extras.proposed_capture || extras.pending_candidates.length > 0) ? (
+          <ReviewBanner extras={extras} conversationId={conversationId} />
+        ) : null}
+
+        {extras && extras.update_proposals.length > 0 ? (
+          <ProposalsPanel proposals={extras.update_proposals} onChanged={() => conversation.refetch()} />
+        ) : null}
 
         {sending ? (
           <View style={styles.typing}>
@@ -195,30 +192,66 @@ export default function ConversationScreen() {
 function ReviewBanner({ extras, conversationId }: { extras: ConversationExtras; conversationId: number }) {
   const theme = useTheme();
 
-  let label = '';
-  let onPress: () => void = () => {};
-  if (extras.proposed_capture) {
-    const candidateCount = extras.pending_candidates.length;
-    label = candidateCount
-      ? `I drafted ${candidateCount} possible ${candidateCount === 1 ? 'memory' : 'memories'} — review them`
-      : 'I drafted a memory from this — review it';
-    const captureId = extras.proposed_capture.id;
-    onPress = () => router.push(`/review/${captureId}?from_chat=${conversationId}`);
-  } else if (extras.update_proposals.length) {
-    const n = extras.update_proposals.length;
-    label = `${n} suggested ${n === 1 ? 'addition' : 'additions'} to your memories — review`;
-    const memoryId = extras.update_proposals[0].memory_id;
-    onPress = () => router.push(`/memory/${memoryId}`);
-  }
+  if (!extras.proposed_capture) return null;
+  const candidateCount = extras.pending_candidates.length;
+  const label = candidateCount
+    ? `I drafted ${candidateCount} possible ${candidateCount === 1 ? 'memory' : 'memories'} — review them`
+    : 'I drafted a memory from this — review it';
+  const captureId = extras.proposed_capture.id;
 
   return (
-    <Pressable onPress={onPress} style={[styles.banner, { backgroundColor: theme.primary }]}>
+    <Pressable
+      onPress={() => router.push(`/review/${captureId}?from_chat=${conversationId}`)}
+      style={[styles.banner, { backgroundColor: theme.primary }]}
+    >
       <Ionicons name="sparkles" size={18} color={theme.onPrimary} />
       <Text style={[styles.bannerText, { color: theme.onPrimary }]} numberOfLines={2}>
         {label}
       </Text>
       <Ionicons name="chevron-forward" size={18} color={theme.onPrimary} />
     </Pressable>
+  );
+}
+
+// AI-proposed additions to existing memories, surfaced from the turn. Apply or
+// dismiss each inline (mirrors the web extras panel) — or open the memory.
+function ProposalsPanel({ proposals, onChanged }: { proposals: MemoryUpdateProposal[]; onChanged: () => void }) {
+  const theme = useTheme();
+  const apply = useMutation({
+    mutationFn: (id: number) => MemoryUpdateProposals.apply(id),
+    onSuccess: onChanged,
+    onError: (e) => Alert.alert('Could not apply', humanizeError(e)),
+  });
+  const dismiss = useMutation({
+    mutationFn: (id: number) => MemoryUpdateProposals.dismiss(id),
+    onSuccess: onChanged,
+  });
+
+  return (
+    <View style={styles.proposals}>
+      {proposals.map((p) => (
+        <View key={p.id} style={[styles.proposalCard, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+          <Text style={[styles.proposalTitle, { color: theme.text }]}>
+            Suggested addition{p.suggested_title ? ` to “${p.suggested_title}”` : ''}
+          </Text>
+          {p.rationale ? <Text style={[styles.proposalMeta, { color: theme.textMuted }]}>{p.rationale}</Text> : null}
+          {p.suggested_body_addition ? (
+            <Text style={[styles.proposalBody, { color: theme.text }]}>{p.suggested_body_addition}</Text>
+          ) : null}
+          <View style={styles.proposalActions}>
+            <Pressable onPress={() => apply.mutate(p.id)} disabled={apply.isPending}>
+              <Text style={[styles.proposalAction, { color: theme.primary }]}>Apply</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push(`/memory/${p.memory_id}`)}>
+              <Text style={[styles.proposalAction, { color: theme.textSecondary }]}>Open memory</Text>
+            </Pressable>
+            <Pressable onPress={() => dismiss.mutate(p.id)} disabled={dismiss.isPending}>
+              <Text style={[styles.proposalAction, { color: theme.textMuted }]}>Dismiss</Text>
+            </Pressable>
+          </View>
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -261,6 +294,13 @@ const styles = StyleSheet.create({
   bubbleText: { fontSize: 16, lineHeight: 22 },
   banner: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, marginHorizontal: Spacing.four, marginBottom: Spacing.two, paddingHorizontal: Spacing.four, paddingVertical: Spacing.three, borderRadius: Radius.md },
   bannerText: { flex: 1, fontSize: 14, fontWeight: '600' },
+  proposals: { marginHorizontal: Spacing.four, marginBottom: Spacing.two, gap: Spacing.two },
+  proposalCard: { borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.md, padding: Spacing.three, gap: 4 },
+  proposalTitle: { fontSize: 14, fontWeight: '700' },
+  proposalMeta: { fontSize: 12, fontStyle: 'italic' },
+  proposalBody: { fontSize: 14, lineHeight: 20 },
+  proposalActions: { flexDirection: 'row', gap: Spacing.four, marginTop: Spacing.one },
+  proposalAction: { fontSize: 14, fontWeight: '600' },
   typing: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingHorizontal: Spacing.four, paddingBottom: Spacing.two },
   typingText: { fontSize: 13 },
   composer: { flexDirection: 'row', alignItems: 'flex-end', gap: Spacing.two, paddingHorizontal: Spacing.three, paddingTop: Spacing.three, borderTopWidth: StyleSheet.hairlineWidth },

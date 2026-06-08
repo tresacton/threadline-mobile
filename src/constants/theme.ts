@@ -44,7 +44,7 @@ export const Colors = {
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
-export type ThemePalette = (typeof Colors)['light'];
+export type ThemePalette = { [K in keyof (typeof Colors)['light']]: string };
 
 export const Fonts = Platform.select({
   ios: { sans: 'system-ui', serif: 'ui-serif', rounded: 'ui-rounded', mono: 'ui-monospace' },

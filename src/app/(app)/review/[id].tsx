@@ -201,11 +201,16 @@ function CandidateCard({
 
       {candidate.uncertainties && candidate.uncertainties.length > 0 ? (
         <View style={styles.uncertain}>
-          {candidate.uncertainties.map((u, i) => (
-            <Text key={i} style={[styles.uncertainText, { color: theme.warning }]}>
-              • {u}
-            </Text>
-          ))}
+          {candidate.uncertainties.map((u, i) => {
+            const text = typeof u === 'string' ? u : u.note;
+            const label = typeof u === 'string' ? null : u.type;
+            return (
+              <Text key={i} style={[styles.uncertainText, { color: theme.warning }]}>
+                • {label ? `${label}: ` : ''}
+                {text}
+              </Text>
+            );
+          })}
         </View>
       ) : null}
 

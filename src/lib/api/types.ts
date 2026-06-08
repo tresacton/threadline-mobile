@@ -317,7 +317,8 @@ export interface CandidateSplitMemory {
   suggested_tags?: string[];
   suggested_people?: string[];
   suggested_places?: string[];
-  uncertainties?: string[];
+  // Each is usually a { type, note } object, but older data may be a plain string.
+  uncertainties?: (string | { type?: string | null; note: string })[];
 }
 
 // ---- Chat ----

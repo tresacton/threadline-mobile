@@ -10,25 +10,28 @@ export interface CardProps extends ViewProps {
 
 export function Card({ children, onPress, padded = true, style, ...rest }: CardProps) {
   const theme = useTheme();
-  const content = (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: theme.card, borderColor: theme.border },
-        padded && styles.padded,
-        style,
-      ]}
-      {...rest}
-    >
+  const cardStyle = [
+    styles.card,
+    { backgroundColor: theme.card, borderColor: theme.border },
+    padded && styles.padded,
+    style,
+  ];
+
+  // When pressable, the layout style (width/flex from `style`) must live on the
+  // outer Pressable — otherwise the Pressable shrinks to content and any width:%
+  // is measured against a collapsed box.
+  if (onPress) {
+    return (
+      <Pressable onPress={onPress} style={({ pressed }) => [cardStyle, { opacity: pressed ? 0.7 : 1 }]} {...rest}>
+        {children}
+      </Pressable>
+    );
+  }
+
+  return (
+    <View style={cardStyle} {...rest}>
       {children}
     </View>
-  );
-
-  if (!onPress) return content;
-  return (
-    <Pressable onPress={onPress} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-      {content}
-    </Pressable>
   );
 }
 

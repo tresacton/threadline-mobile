@@ -17,8 +17,8 @@ import * as session from '@/lib/auth/sessionStore';
 
 const FORMAT_LABELS: Record<string, string> = {
   json: 'JSON (everything, machine-readable)',
-  markdown: 'Markdown (.zip)',
-  obsidian: 'Obsidian vault (.zip)',
+  markdown_zip: 'Markdown (.zip)',
+  obsidian_vault: 'Obsidian vault (.zip)',
   csv: 'Spreadsheet (CSV)',
 };
 

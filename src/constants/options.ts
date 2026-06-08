@@ -32,3 +32,11 @@ export const ENRICHMENT_LEVEL_OPTIONS: SelectOption<string>[] = [
   { value: 'practical', label: 'Practical' },
   { value: 'deep', label: 'Deep' },
 ];
+
+// How this memory relates in time to another memory (temporal_relation_type).
+export const TEMPORAL_RELATION_OPTIONS: SelectOption<string>[] = [
+  { value: 'before', label: 'happened before' },
+  { value: 'after', label: 'happened after' },
+  { value: 'same_time', label: 'same time as' },
+  { value: 'around', label: 'around the same time as' },
+];

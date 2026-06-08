@@ -205,6 +205,7 @@ export interface MemoryRelation {
   id: number;
   from_memory_id: number;
   to_memory_id: number;
+  to_memory_title: string | null;
   temporal_relation_type: string | null;
   note: string | null;
   created_at: string;

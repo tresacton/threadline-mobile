@@ -49,7 +49,7 @@ export const Memories = {
       .then((r) => r.memory),
   summarise: (id: number) => api.post<{ status: string }>(`/memories/${id}/summarise`),
   reconstruct: (id: number) =>
-    api.get<{ temporal_context: TemporalContext }>(`/memories/${id}/reconstruct`).then((r) => r.temporal_context),
+    api.get<{ temporal_context: TemporalContext; relations: MemoryRelation[] }>(`/memories/${id}/reconstruct`),
   suggestDate: (id: number) =>
     api.post<{ date_suggestion: DateSuggestion }>(`/memories/${id}/suggest_date`).then((r) => r.date_suggestion),
   split: (id: number) =>

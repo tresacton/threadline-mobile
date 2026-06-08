@@ -15,12 +15,20 @@ export async function biometricLabel(): Promise<string> {
   return 'biometrics';
 }
 
-/** Prompts for biometric (falling back to device passcode). Returns success. */
+/**
+ * Prompts for Face ID / Touch ID only — device-passcode fallback is disabled so
+ * the user gets the biometric scan, not the grey iOS passcode screen. Returns
+ * success; never throws.
+ */
 export async function authenticate(prompt = 'Unlock Threadline'): Promise<boolean> {
-  const result = await LocalAuthentication.authenticateAsync({
-    promptMessage: prompt,
-    cancelLabel: 'Cancel',
-    disableDeviceFallback: false,
-  });
-  return result.success;
+  try {
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: prompt,
+      cancelLabel: 'Cancel',
+      disableDeviceFallback: true,
+    });
+    return result.success;
+  } catch {
+    return false;
+  }
 }

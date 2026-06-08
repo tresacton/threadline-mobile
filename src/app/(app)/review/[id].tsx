@@ -41,6 +41,21 @@ export default function ReviewCaptureScreen() {
     onError: (e) => Alert.alert('Could not analyse', humanizeError(e)),
   });
 
+  const discard = useMutation({
+    mutationFn: () => Captures.remove(captureId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['drafts'] });
+      router.back();
+    },
+    onError: (e) => Alert.alert('Could not discard', humanizeError(e)),
+  });
+
+  const confirmDiscard = () =>
+    Alert.alert('Discard draft', 'Delete this draft? It won’t become a memory.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Discard', style: 'destructive', onPress: () => discard.mutate() },
+    ]);
+
   if (capture.isLoading) return <LoadingView />;
   if (capture.error || !capture.data) return <ErrorView error={capture.error} onRetry={() => capture.refetch()} />;
 
@@ -84,6 +99,8 @@ export default function ReviewCaptureScreen() {
           ))
         )}
       </View>
+
+      <Button label="Discard this draft" variant="danger" onPress={confirmDiscard} loading={discard.isPending} />
     </ScrollView>
   );
 }

@@ -31,13 +31,26 @@ function routeForNode(node: GraphNode): string | null {
 export default function EgoGraphScreen() {
   const theme = useTheme();
   const params = useLocalSearchParams<{ type: string; id: string }>();
-  const [center, setCenter] = useState(`${params.type}:${params.id}`);
+  const origin = `${params.type}:${params.id}`;
+  const [center, setCenter] = useState(origin);
+  const browsedAway = center !== origin;
 
   const ego = useQuery({ queryKey: ['ego', center], queryFn: () => Graph.ego(center) });
 
   return (
     <View style={[styles.flex, { backgroundColor: theme.background }]}>
-      <Stack.Screen options={{ headerShown: true, title: 'Connections' }} />
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Connections',
+          headerRight: () =>
+            browsedAway ? (
+              <Pressable onPress={() => setCenter(origin)} hitSlop={10}>
+                <Ionicons name="refresh" size={20} color={theme.primary} />
+              </Pressable>
+            ) : null,
+        }}
+      />
 
       {ego.isLoading ? (
         <LoadingView />
@@ -60,6 +73,11 @@ export default function EgoGraphScreen() {
                 {ego.data.depth === 2 ? ' · showing 1st & 2nd degree' : ' · showing direct only'}
               </Text>
             </View>
+            {browsedAway ? (
+              <Pressable onPress={() => setCenter(origin)} style={[styles.openBtn, { borderColor: theme.border }]}>
+                <Text style={[styles.openText, { color: theme.primary }]}>Reset</Text>
+              </Pressable>
+            ) : null}
             {routeForNode(ego.data.center) ? (
               <Pressable
                 onPress={() => router.push(routeForNode(ego.data!.center!) as never)}

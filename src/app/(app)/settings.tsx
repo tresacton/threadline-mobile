@@ -25,7 +25,6 @@ export default function SettingsScreen() {
   const [companionName, setCompanionName] = useState('');
   const [bodySource, setBodySource] = useState<string>('ai');
   const [enrichmentLevel, setEnrichmentLevel] = useState<string>('practical');
-  const [trainingOptIn, setTrainingOptIn] = useState(false);
 
   useEffect(() => {
     if (settings.data) {
@@ -34,7 +33,6 @@ export default function SettingsScreen() {
       setCompanionName(s.companion_name);
       setBodySource(s.default_memory_body_source);
       setEnrichmentLevel(s.enrichment_level);
-      setTrainingOptIn(s.training_opt_in);
     }
   }, [settings.data]);
 
@@ -45,7 +43,6 @@ export default function SettingsScreen() {
         companion_name: companionName.trim(),
         default_memory_body_source: bodySource,
         enrichment_level: enrichmentLevel,
-        training_opt_in: trainingOptIn,
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['settings'] });
@@ -98,15 +95,6 @@ export default function SettingsScreen() {
         <Switch value={biometricEnabled} onValueChange={(v) => setBiometricEnabled(v)} />
       </Card>
 
-      <Card style={styles.switchRow}>
-        <View style={styles.switchText}>
-          <Text style={[styles.switchLabel, { color: theme.text }]}>Help improve the AI</Text>
-          <Text style={[styles.switchHint, { color: theme.textMuted }]}>
-            Allow anonymised use of your data for training. Off by default.
-          </Text>
-        </View>
-        <Switch value={trainingOptIn} onValueChange={setTrainingOptIn} />
-      </Card>
 
       <View style={styles.danger}>
         <Text style={[styles.dangerTitle, { color: theme.textSecondary }]}>Danger zone</Text>

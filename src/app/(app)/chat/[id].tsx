@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  InputAccessoryView,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -23,6 +25,8 @@ import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { Chat } from '@/lib/api/endpoints';
 import type { AiMessage, ConversationExtras } from '@/lib/api/types';
+
+const KEYBOARD_ACCESSORY_ID = 'chatComposerAccessory';
 
 function newClientToken(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -139,7 +143,7 @@ export default function ConversationScreen() {
           keyExtractor={(m) => String(m.id)}
           contentContainerStyle={styles.messages}
           onContentSizeChange={scrollToEnd}
-          keyboardDismissMode="interactive"
+          keyboardDismissMode="none"
           keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => <Bubble message={item} onLongPress={() => copyMessage(item.content)} />}
         />
@@ -161,6 +165,7 @@ export default function ConversationScreen() {
             placeholder="Share a memory or a thought…"
             placeholderTextColor={theme.textMuted}
             multiline
+            inputAccessoryViewID={Platform.OS === 'ios' ? KEYBOARD_ACCESSORY_ID : undefined}
           />
           <Pressable
             onPress={send}
@@ -171,6 +176,16 @@ export default function ConversationScreen() {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
+
+      {Platform.OS === 'ios' ? (
+        <InputAccessoryView nativeID={KEYBOARD_ACCESSORY_ID}>
+          <View style={[styles.accessory, { backgroundColor: theme.backgroundElement, borderTopColor: theme.border }]}>
+            <Pressable onPress={() => Keyboard.dismiss()} hitSlop={8}>
+              <Text style={[styles.accessoryDone, { color: theme.primary }]}>Done</Text>
+            </Pressable>
+          </View>
+        </InputAccessoryView>
+      ) : null}
     </View>
   );
 }
@@ -251,4 +266,6 @@ const styles = StyleSheet.create({
   composer: { flexDirection: 'row', alignItems: 'flex-end', gap: Spacing.two, paddingHorizontal: Spacing.three, paddingTop: Spacing.three, borderTopWidth: StyleSheet.hairlineWidth },
   input: { flex: 1, maxHeight: 120, borderRadius: Radius.lg, paddingHorizontal: Spacing.four, paddingTop: Spacing.three, paddingBottom: Spacing.three, fontSize: 16 },
   sendBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  accessory: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: Spacing.four, paddingVertical: Spacing.two, borderTopWidth: StyleSheet.hairlineWidth },
+  accessoryDone: { fontSize: 16, fontWeight: '600' },
 });

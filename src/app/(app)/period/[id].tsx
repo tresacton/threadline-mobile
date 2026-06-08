@@ -1,16 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { Alert, StyleSheet, Text } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
 import { TextField } from '@/components/ui/TextField';
 import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { LifePeriods } from '@/lib/api/endpoints';
 
 export default function EditPeriodScreen() {
+  const theme = useTheme();
   const qc = useQueryClient();
   const { id } = useLocalSearchParams<{ id: string }>();
   const periodId = Number(id);
@@ -72,6 +74,11 @@ export default function EditPeriodScreen() {
       <TextField label="Description" value={description} onChangeText={setDescription} multiline style={styles.area} />
       <TextField label="Start (YYYY-MM-DD)" value={start} onChangeText={setStart} placeholder="2018-01-01" autoCapitalize="none" />
       <TextField label="End (YYYY-MM-DD)" value={end} onChangeText={setEnd} placeholder="2021-12-31" autoCapitalize="none" />
+      {period?.memory_count != null ? (
+        <Text style={{ color: theme.textMuted }}>
+          In {period.memory_count} {period.memory_count === 1 ? 'memory' : 'memories'}
+        </Text>
+      ) : null}
       <Button label="View connections" variant="secondary" onPress={() => router.push(`/graph/life_period/${periodId}`)} />
       <Button label="Save" onPress={() => save.mutate()} loading={save.isPending} />
       <Button label="Delete period" variant="danger" onPress={confirmDelete} loading={remove.isPending} />

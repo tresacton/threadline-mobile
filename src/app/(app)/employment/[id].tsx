@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, StyleSheet } from 'react-native';
+import { Alert, StyleSheet, Text } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
@@ -10,9 +10,11 @@ import { TextField } from '@/components/ui/TextField';
 import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
 import { DATE_CONFIDENCE_OPTIONS } from '@/constants/options';
 import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { Employments } from '@/lib/api/endpoints';
 
 export default function EditEmploymentScreen() {
+  const theme = useTheme();
   const qc = useQueryClient();
   const { id } = useLocalSearchParams<{ id: string }>();
   const employmentId = Number(id);
@@ -80,6 +82,11 @@ export default function EditEmploymentScreen() {
       <TextField label="Start (YYYY-MM-DD)" value={start} onChangeText={setStart} placeholder="2015-03-01" autoCapitalize="none" />
       <TextField label="End (YYYY-MM-DD)" value={end} onChangeText={setEnd} placeholder="leave blank if current" autoCapitalize="none" />
       <Select label="Date confidence" value={confidence} options={DATE_CONFIDENCE_OPTIONS} onChange={setConfidence} />
+      {employment ? (
+        <Text style={{ color: theme.textMuted }}>
+          In {employment.memory_ids.length} {employment.memory_ids.length === 1 ? 'memory' : 'memories'}
+        </Text>
+      ) : null}
       <TextField label="Notes" value={notes} onChangeText={setNotes} multiline style={styles.area} />
       <Button label="Save" onPress={() => save.mutate()} loading={save.isPending} />
       <Button label="Delete job" variant="danger" onPress={confirmDelete} loading={remove.isPending} />

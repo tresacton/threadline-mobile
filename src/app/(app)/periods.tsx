@@ -57,11 +57,12 @@ export default function PeriodsScreen() {
           renderItem={({ item }) => (
             <Card style={styles.row} onPress={() => router.push(`/period/${item.id}`)}>
               <Text style={[styles.name, { color: theme.text }]}>{item.name}</Text>
-              {item.date_range_start || item.date_range_end ? (
-                <Text style={[styles.meta, { color: theme.textMuted }]}>
-                  {item.date_range_start ?? '?'} – {item.date_range_end ?? 'present'}
-                </Text>
-              ) : null}
+              <Text style={[styles.meta, { color: theme.textMuted }]}>
+                {item.date_range_start || item.date_range_end
+                  ? `${item.date_range_start ?? '?'} – ${item.date_range_end ?? 'present'} · `
+                  : ''}
+                {item.memory_count ?? 0} {item.memory_count === 1 ? 'memory' : 'memories'}
+              </Text>
             </Card>
           )}
         />

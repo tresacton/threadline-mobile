@@ -60,9 +60,10 @@ export default function PeopleScreen() {
           renderItem={({ item }) => (
             <Card style={styles.row} onPress={() => router.push(`/person/${item.id}`)}>
               <Text style={[styles.name, { color: theme.text }]}>{item.name}</Text>
-              {item.relationship_label ? (
-                <Text style={[styles.meta, { color: theme.textMuted }]}>{item.relationship_label}</Text>
-              ) : null}
+              <Text style={[styles.meta, { color: theme.textMuted }]}>
+                {item.relationship_label ? `${item.relationship_label} · ` : ''}
+                {item.memory_count ?? 0} {item.memory_count === 1 ? 'memory' : 'memories'}
+              </Text>
             </Card>
           )}
         />

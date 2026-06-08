@@ -89,6 +89,7 @@ export interface LifePeriod {
   date_range_start: string | null;
   date_range_end: string | null;
   place_id: number | null;
+  memory_count?: number;
 }
 
 export interface Tag {

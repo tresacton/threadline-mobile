@@ -60,7 +60,10 @@ export default function PlacesScreen() {
           renderItem={({ item }) => (
             <Card style={styles.row} onPress={() => router.push(`/place/${item.id}`)}>
               <Text style={[styles.name, { color: theme.text }]}>{item.name}</Text>
-              {item.city ? <Text style={[styles.meta, { color: theme.textMuted }]}>{item.city}</Text> : null}
+              <Text style={[styles.meta, { color: theme.textMuted }]}>
+                {item.city ? `${item.city} · ` : ''}
+                {item.memory_count ?? 0} {item.memory_count === 1 ? 'memory' : 'memories'}
+              </Text>
             </Card>
           )}
         />

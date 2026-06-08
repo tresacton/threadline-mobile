@@ -61,7 +61,7 @@ export default function MoreScreen() {
   return (
     <ScrollView
       style={{ backgroundColor: theme.background }}
-      contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.four }]}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + Spacing.two }]}
     >
       <Text style={[styles.title, { color: theme.text }]}>More</Text>
       {user ? <Text style={[styles.email, { color: theme.textMuted }]}>{user.email}</Text> : null}

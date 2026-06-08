@@ -63,11 +63,12 @@ export default function EmploymentsScreen() {
                 {item.title ? `${item.title} · ` : ''}
                 {item.employer}
               </Text>
-              {item.date_range_start || item.date_range_end ? (
-                <Text style={[styles.meta, { color: theme.textMuted }]}>
-                  {item.date_range_start ?? '?'} – {item.date_range_end ?? 'present'}
-                </Text>
-              ) : null}
+              <Text style={[styles.meta, { color: theme.textMuted }]}>
+                {item.date_range_start || item.date_range_end
+                  ? `${item.date_range_start ?? '?'} – ${item.date_range_end ?? 'present'} · `
+                  : ''}
+                {item.memory_ids.length} {item.memory_ids.length === 1 ? 'memory' : 'memories'}
+              </Text>
             </Card>
           )}
         />

@@ -31,6 +31,7 @@ const SECTIONS: { title: string; items: Item[] }[] = [
     title: 'Companion',
     items: [
       { icon: 'sparkles-outline', label: 'Reflect', route: '/reflect' },
+      { icon: 'document-text-outline', label: 'Drafts to review', route: '/drafts' },
       { icon: 'mic-outline', label: 'Voice', route: '/voice-sessions' },
     ],
   },

@@ -243,6 +243,7 @@ export interface SourceCapture {
   raw_text: string;
   source_type?: string | null;
   status?: string | null;
+  candidate_count?: number;
   created_at?: string;
 }
 

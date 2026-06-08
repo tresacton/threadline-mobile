@@ -183,6 +183,8 @@ export const JobFinder = {
 
 // ---- Captures / split candidates ----
 export const Captures = {
+  pending: () =>
+    api.get<{ source_captures: SourceCapture[] }>('/source_captures').then((r) => r.source_captures),
   get: (id: number) => api.get<{ source_capture: SourceCapture }>(`/source_captures/${id}`).then((r) => r.source_capture),
   create: (raw_text: string, source_type_slug?: string) =>
     api

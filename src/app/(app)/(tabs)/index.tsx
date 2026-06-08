@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { LoadingView } from '@/components/ui/states';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { Notifications, OpenThreads, Settings } from '@/lib/api/endpoints';
+import { Captures, Notifications, OpenThreads, Settings } from '@/lib/api/endpoints';
 import { useAuth } from '@/lib/auth/AuthContext';
 
 export default function HomeScreen() {
@@ -19,6 +19,7 @@ export default function HomeScreen() {
   const settings = useQuery({ queryKey: ['settings'], queryFn: Settings.get });
   const notifications = useQuery({ queryKey: ['notifications'], queryFn: Notifications.list });
   const threads = useQuery({ queryKey: ['open_threads'], queryFn: () => OpenThreads.list() });
+  const drafts = useQuery({ queryKey: ['drafts'], queryFn: Captures.pending });
 
   const companion = settings.data?.settings.companion_name ?? user?.companion_name ?? 'your companion';
   const entitlement = settings.data?.entitlement;
@@ -41,6 +42,18 @@ export default function HomeScreen() {
         <QuickAction icon="git-branch-outline" label="Open threads" onPress={() => router.push('/threads')} badge={threads.data?.length} />
         <QuickAction icon="time-outline" label="Timeline" onPress={() => router.push('/timeline')} />
       </View>
+
+      {drafts.data && drafts.data.length > 0 ? (
+        <Card onPress={() => router.push('/drafts')} style={styles.notif}>
+          <View style={styles.notifRow}>
+            <Ionicons name="document-text" size={20} color={theme.primary} />
+            <Text style={[styles.notifText, { color: theme.text }]}>
+              {drafts.data.length} draft{drafts.data.length === 1 ? '' : 's'} to review
+            </Text>
+            <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
+          </View>
+        </Card>
+      ) : null}
 
       {notifications.data && notifications.data.unseen_count > 0 ? (
         <Card onPress={() => router.push('/notifications')} style={styles.notif}>

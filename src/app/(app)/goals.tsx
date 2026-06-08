@@ -17,10 +17,21 @@ import type { Goal } from '@/lib/api/types';
 export default function GoalsScreen() {
   const theme = useTheme();
   const qc = useQueryClient();
-  const goals = useQuery({ queryKey: ['goals'], queryFn: () => Goals.list() });
+  const [statusFilter, setStatusFilter] = useState<'active' | 'closed' | 'all'>('active');
+  const [search, setSearch] = useState('');
+  const goals = useQuery({
+    queryKey: ['goals', statusFilter],
+    queryFn: () => Goals.list(statusFilter === 'all' ? undefined : statusFilter),
+  });
   const [title, setTitle] = useState('');
   const [template, setTemplate] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  const q = search.trim().toLowerCase();
+  const displayed = (goals.data ?? [])
+    .filter((g) => !q || g.title.toLowerCase().includes(q))
+    // Active before closed (each already recent-first from the API).
+    .sort((a, b) => Number(a.status === 'closed') - Number(b.status === 'closed'));
 
   const add = useMutation({
     mutationFn: () =>
@@ -54,15 +65,31 @@ export default function GoalsScreen() {
         />
       </View>
 
+      <View style={styles.controls}>
+        <Select
+          value={statusFilter}
+          options={[
+            { value: 'active', label: 'Active' },
+            { value: 'closed', label: 'Closed' },
+            { value: 'all', label: 'All' },
+          ]}
+          onChange={(v) => setStatusFilter(v as 'active' | 'closed' | 'all')}
+        />
+        <TextField placeholder="Search goals" value={search} onChangeText={setSearch} autoCapitalize="none" />
+      </View>
+
       {goals.isLoading ? (
         <LoadingView />
       ) : goals.error ? (
         <ErrorView error={goals.error} onRetry={() => goals.refetch()} />
-      ) : !goals.data || goals.data.length === 0 ? (
-        <EmptyState title="No goals yet" body="Goals organise your reconstruction work." />
+      ) : displayed.length === 0 ? (
+        <EmptyState
+          title={q ? 'No matches' : statusFilter === 'closed' ? 'No closed goals' : 'No goals yet'}
+          body={q ? 'Try different words.' : 'Goals organise your reconstruction work.'}
+        />
       ) : (
         <FlatList
-          data={goals.data}
+          data={displayed}
           keyExtractor={(g) => String(g.id)}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => <GoalRow goal={item} />}
@@ -92,6 +119,7 @@ function GoalRow({ goal }: { goal: Goal }) {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   form: { padding: Spacing.four, gap: Spacing.three },
+  controls: { paddingHorizontal: Spacing.four, paddingBottom: Spacing.three, gap: Spacing.three },
   list: { paddingHorizontal: Spacing.four, paddingBottom: Spacing.eight, gap: Spacing.three },
   row: { gap: Spacing.two },
   rowMain: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },

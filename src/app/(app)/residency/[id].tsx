@@ -5,8 +5,10 @@ import { Alert, StyleSheet, Text } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
+import { Select } from '@/components/ui/Select';
 import { TextField } from '@/components/ui/TextField';
 import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
+import { DATE_CONFIDENCE_OPTIONS } from '@/constants/options';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { Residencies } from '@/lib/api/endpoints';
@@ -21,12 +23,14 @@ export default function EditResidencyScreen() {
 
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
+  const [confidence, setConfidence] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
     if (!residency) return;
     setStart(residency.date_range_start ?? '');
     setEnd(residency.date_range_end ?? '');
+    setConfidence(residency.date_confidence ?? null);
     setNotes(residency.notes ?? '');
   }, [residency]);
 
@@ -37,6 +41,7 @@ export default function EditResidencyScreen() {
       Residencies.update(residencyId, {
         date_range_start: start.trim() || null,
         date_range_end: end.trim() || null,
+        date_confidence_slug: confidence ?? undefined,
         notes: notes.trim(),
       }),
     onSuccess: () => {
@@ -69,6 +74,7 @@ export default function EditResidencyScreen() {
       <Text style={[styles.place, { color: theme.text }]}>{residency?.place_name ?? 'Residence'}</Text>
       <TextField label="Moved in (YYYY-MM-DD)" value={start} onChangeText={setStart} placeholder="2016-06-01" autoCapitalize="none" />
       <TextField label="Moved out (YYYY-MM-DD)" value={end} onChangeText={setEnd} placeholder="leave blank if current" autoCapitalize="none" />
+      <Select label="Date confidence" value={confidence} options={DATE_CONFIDENCE_OPTIONS} onChange={setConfidence} />
       <TextField label="Notes" value={notes} onChangeText={setNotes} multiline style={styles.area} />
       <Button label="Save" onPress={() => save.mutate()} loading={save.isPending} />
       <Button label="Delete residence" variant="danger" onPress={confirmDelete} loading={remove.isPending} />

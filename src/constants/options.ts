@@ -33,6 +33,22 @@ export const ENRICHMENT_LEVEL_OPTIONS: SelectOption<string>[] = [
   { value: 'deep', label: 'Deep' },
 ];
 
+// Built-in goal templates with auto-tracked progress (Goals::Progress).
+export const GOAL_TEMPLATE_OPTIONS: SelectOption<string>[] = [
+  { value: '', label: 'Freeform' },
+  { value: 'residences', label: 'Map my residences' },
+  { value: 'career_history', label: 'Map my career' },
+  { value: 'enrich_memories', label: 'Enrich my memories' },
+];
+
+export const DATE_CONFIDENCE_OPTIONS: SelectOption<string>[] = [
+  'certain',
+  'likely',
+  'rough',
+  'guess',
+  'unknown',
+].map(opt);
+
 // How this memory relates in time to another memory (temporal_relation_type).
 export const TEMPORAL_RELATION_OPTIONS: SelectOption<string>[] = [
   { value: 'before', label: 'happened before' },

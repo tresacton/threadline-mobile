@@ -270,6 +270,9 @@ export interface Conversation {
   mode: string | null;
   active_flow: string | null;
   in_flow: boolean;
+  message_count?: number;
+  memories_created?: number;
+  records_updated?: number;
   created_at: string;
   updated_at: string;
 }

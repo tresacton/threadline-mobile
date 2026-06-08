@@ -8,7 +8,7 @@ import { Screen } from '@/components/ui/Screen';
 import { Select } from '@/components/ui/Select';
 import { TextField } from '@/components/ui/TextField';
 import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
-import { CATEGORY_OPTIONS, SENSITIVITY_OPTIONS } from '@/constants/options';
+import { CATEGORY_OPTIONS, DATE_CONFIDENCE_OPTIONS, SENSITIVITY_OPTIONS } from '@/constants/options';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { Memories } from '@/lib/api/endpoints';
@@ -25,6 +25,7 @@ export default function EditMemoryScreen() {
   const [dateLabel, setDateLabel] = useState('');
   const [sensitivity, setSensitivity] = useState<string | null>(null);
   const [category, setCategory] = useState<string | null>(null);
+  const [dateConfidence, setDateConfidence] = useState<string | null>(null);
   const [tags, setTags] = useState('');
   const [people, setPeople] = useState('');
   const [places, setPlaces] = useState('');
@@ -37,6 +38,7 @@ export default function EditMemoryScreen() {
     setDateLabel(m.date_label ?? '');
     setSensitivity(m.sensitivity ?? null);
     setCategory(m.category ?? null);
+    setDateConfidence(m.date_confidence ?? null);
     setTags(m.tags.join(', '));
     setPeople(m.people.join(', '));
     setPlaces(m.places.join(', '));
@@ -50,6 +52,7 @@ export default function EditMemoryScreen() {
         fuzzy_date_label: dateLabel.trim(),
         sensitivity_slug: sensitivity ?? undefined,
         memory_category_slug: category ?? undefined,
+        date_confidence_slug: dateConfidence ?? undefined,
         tag_names: tags,
         person_names: people,
         place_names: places,
@@ -85,6 +88,7 @@ export default function EditMemoryScreen() {
       />
       <Select label="Sensitivity" value={sensitivity} options={SENSITIVITY_OPTIONS} onChange={setSensitivity} />
       <Select label="Category" value={category} options={CATEGORY_OPTIONS} onChange={setCategory} />
+      <Select label="Date confidence" value={dateConfidence} options={DATE_CONFIDENCE_OPTIONS} onChange={setDateConfidence} />
       <TextField label="People (comma-separated)" value={people} onChangeText={setPeople} placeholder="Mum, Sh.S" />
       <TextField label="Places (comma-separated)" value={places} onChangeText={setPlaces} placeholder="Sydney" />
       <TextField label="Tags (comma-separated)" value={tags} onChangeText={setTags} placeholder="work, family" />

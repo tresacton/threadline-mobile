@@ -5,8 +5,10 @@ import { Alert, StyleSheet } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
+import { Select } from '@/components/ui/Select';
 import { TextField } from '@/components/ui/TextField';
 import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
+import { DATE_CONFIDENCE_OPTIONS } from '@/constants/options';
 import { Spacing } from '@/constants/theme';
 import { Employments } from '@/lib/api/endpoints';
 
@@ -21,6 +23,7 @@ export default function EditEmploymentScreen() {
   const [title, setTitle] = useState('');
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
+  const [confidence, setConfidence] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
@@ -29,6 +32,7 @@ export default function EditEmploymentScreen() {
     setTitle(employment.title ?? '');
     setStart(employment.date_range_start ?? '');
     setEnd(employment.date_range_end ?? '');
+    setConfidence(employment.date_confidence ?? null);
     setNotes(employment.notes ?? '');
   }, [employment]);
 
@@ -41,6 +45,7 @@ export default function EditEmploymentScreen() {
         title: title.trim(),
         date_range_start: start.trim() || null,
         date_range_end: end.trim() || null,
+        date_confidence_slug: confidence ?? undefined,
         notes: notes.trim(),
       }),
     onSuccess: () => {
@@ -74,6 +79,7 @@ export default function EditEmploymentScreen() {
       <TextField label="Role" value={title} onChangeText={setTitle} placeholder="Title" />
       <TextField label="Start (YYYY-MM-DD)" value={start} onChangeText={setStart} placeholder="2015-03-01" autoCapitalize="none" />
       <TextField label="End (YYYY-MM-DD)" value={end} onChangeText={setEnd} placeholder="leave blank if current" autoCapitalize="none" />
+      <Select label="Date confidence" value={confidence} options={DATE_CONFIDENCE_OPTIONS} onChange={setConfidence} />
       <TextField label="Notes" value={notes} onChangeText={setNotes} multiline style={styles.area} />
       <Button label="Save" onPress={() => save.mutate()} loading={save.isPending} />
       <Button label="Delete job" variant="danger" onPress={confirmDelete} loading={remove.isPending} />

@@ -5,8 +5,10 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Select } from '@/components/ui/Select';
 import { TextField } from '@/components/ui/TextField';
 import { EmptyState, ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
+import { GOAL_TEMPLATE_OPTIONS } from '@/constants/options';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { Goals } from '@/lib/api/endpoints';
@@ -17,12 +19,19 @@ export default function GoalsScreen() {
   const qc = useQueryClient();
   const goals = useQuery({ queryKey: ['goals'], queryFn: () => Goals.list() });
   const [title, setTitle] = useState('');
+  const [template, setTemplate] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const add = useMutation({
-    mutationFn: () => Goals.create({ title: title.trim() }),
+    mutationFn: () =>
+      Goals.create(
+        template
+          ? { title: title.trim(), template_slug: template, scoring_mode: 'auto' }
+          : { title: title.trim() },
+      ),
     onSuccess: () => {
       setTitle('');
+      setTemplate('');
       qc.invalidateQueries({ queryKey: ['goals'] });
     },
     onError: (e) => setError(humanizeError(e)),
@@ -32,7 +41,8 @@ export default function GoalsScreen() {
     <View style={[styles.flex, { backgroundColor: theme.background }]}>
       <Stack.Screen options={{ headerShown: true, title: 'Goals' }} />
       <View style={styles.form}>
-        <TextField label="New goal" value={title} onChangeText={setTitle} placeholder="e.g. Reconstruct my twenties" error={error} />
+        <Select label="Goal type" value={template} options={GOAL_TEMPLATE_OPTIONS} onChange={setTemplate} />
+        <TextField label="Title" value={title} onChangeText={setTitle} placeholder="e.g. Reconstruct my twenties" error={error} />
         <Button
           label="Add goal"
           onPress={() => {

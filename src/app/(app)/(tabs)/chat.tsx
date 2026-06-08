@@ -9,6 +9,19 @@ import { EmptyState, ErrorView, LoadingView } from '@/components/ui/states';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { Chat } from '@/lib/api/endpoints';
+import type { Conversation } from '@/lib/api/types';
+import { timeAgo } from '@/lib/format';
+
+// A compact summary line: what the chat produced + when it was last active.
+function conversationMeta(c: Conversation): string {
+  const parts: string[] = [];
+  if (c.mode) parts.push(c.mode);
+  if (c.memories_created) parts.push(`${c.memories_created} ${c.memories_created === 1 ? 'memory' : 'memories'}`);
+  if (c.records_updated) parts.push(`${c.records_updated} updated`);
+  const when = timeAgo(c.updated_at);
+  if (when) parts.push(when);
+  return parts.join(' · ');
+}
 
 export default function ChatListScreen() {
   const theme = useTheme();
@@ -74,9 +87,9 @@ export default function ChatListScreen() {
                 <Text style={[styles.rowTitle, { color: theme.text }]} numberOfLines={1}>
                   {item.title || 'Chat'}
                 </Text>
-                {item.mode ? (
-                  <Text style={[styles.rowMeta, { color: theme.textMuted }]}>{item.mode}</Text>
-                ) : null}
+                <Text style={[styles.rowMeta, { color: theme.textMuted }]} numberOfLines={1}>
+                  {conversationMeta(item)}
+                </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color={theme.textMuted} />
             </Card>
@@ -98,7 +111,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   rowMain: { flex: 1, gap: 2 },
   rowTitle: { fontSize: 16, fontWeight: '600' },
-  rowMeta: { fontSize: 13, textTransform: 'capitalize' },
+  rowMeta: { fontSize: 13 },
   empty: { flex: 1, justifyContent: 'center', gap: Spacing.four },
   cta: { marginHorizontal: Spacing.six, paddingVertical: Spacing.four, borderRadius: 12, alignItems: 'center' },
   ctaText: { color: '#fff', fontSize: 16, fontWeight: '600' },

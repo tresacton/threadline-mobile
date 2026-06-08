@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -19,10 +19,19 @@ import { ErrorView, LoadingView } from '@/components/ui/states';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { Chat } from '@/lib/api/endpoints';
-import type { AiMessage } from '@/lib/api/types';
+import type { AiMessage, ConversationExtras } from '@/lib/api/types';
 
 function newClientToken(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function hasReviewable(extras: ConversationExtras | null): boolean {
+  if (!extras) return false;
+  return (
+    !!extras.proposed_capture ||
+    extras.pending_candidates.length > 0 ||
+    extras.update_proposals.length > 0
+  );
 }
 
 export default function ConversationScreen() {
@@ -32,6 +41,7 @@ export default function ConversationScreen() {
   const conversationId = Number(id);
 
   const [messages, setMessages] = useState<AiMessage[]>([]);
+  const [extras, setExtras] = useState<ConversationExtras | null>(null);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const listRef = useRef<FlatList<AiMessage>>(null);
@@ -42,7 +52,10 @@ export default function ConversationScreen() {
   });
 
   useEffect(() => {
-    if (conversation.data) setMessages(conversation.data.messages);
+    if (conversation.data) {
+      setMessages(conversation.data.messages);
+      setExtras(conversation.data.extras);
+    }
   }, [conversation.data]);
 
   const scrollToEnd = () => requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
@@ -53,7 +66,6 @@ export default function ConversationScreen() {
     setDraft('');
     setSending(true);
 
-    // Optimistic user bubble.
     const optimistic: AiMessage = {
       id: -Date.now(),
       role: 'user',
@@ -72,9 +84,9 @@ export default function ConversationScreen() {
         if (turn.turn.assistant_message) next.push(turn.turn.assistant_message);
         return next;
       });
+      setExtras(turn.extras);
       scrollToEnd();
     } catch {
-      // Roll back the optimistic bubble and restore the draft so nothing is lost.
       setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
       setDraft(content);
     } finally {
@@ -99,14 +111,20 @@ export default function ConversationScreen() {
           keyExtractor={(m) => String(m.id)}
           contentContainerStyle={styles.messages}
           onContentSizeChange={scrollToEnd}
+          keyboardDismissMode="interactive"
+          keyboardShouldPersistTaps="handled"
           renderItem={({ item }) => <Bubble message={item} />}
         />
+
+        {hasReviewable(extras) ? <ReviewBanner extras={extras!} conversationId={conversationId} /> : null}
+
         {sending ? (
           <View style={styles.typing}>
             <ActivityIndicator size="small" color={theme.textMuted} />
             <Text style={[styles.typingText, { color: theme.textMuted }]}>Thinking…</Text>
           </View>
         ) : null}
+
         <View style={[styles.composer, { borderTopColor: theme.border, paddingBottom: insets.bottom + Spacing.two, backgroundColor: theme.card }]}>
           <TextInput
             style={[styles.input, { color: theme.text, backgroundColor: theme.backgroundElement }]}
@@ -129,19 +147,45 @@ export default function ConversationScreen() {
   );
 }
 
+// When a turn drafts a capture or surfaces proposals, show a tappable banner that
+// takes the user to review it — mirroring the web "extras" panel.
+function ReviewBanner({ extras, conversationId }: { extras: ConversationExtras; conversationId: number }) {
+  const theme = useTheme();
+
+  let label = '';
+  let onPress: () => void = () => {};
+  if (extras.proposed_capture) {
+    const candidateCount = extras.pending_candidates.length;
+    label = candidateCount
+      ? `I drafted ${candidateCount} possible ${candidateCount === 1 ? 'memory' : 'memories'} — review them`
+      : 'I drafted a memory from this — review it';
+    const captureId = extras.proposed_capture.id;
+    onPress = () => router.push(`/review/${captureId}?from_chat=${conversationId}`);
+  } else if (extras.update_proposals.length) {
+    const n = extras.update_proposals.length;
+    label = `${n} suggested ${n === 1 ? 'addition' : 'additions'} to your memories — review`;
+    const memoryId = extras.update_proposals[0].memory_id;
+    onPress = () => router.push(`/memory/${memoryId}`);
+  }
+
+  return (
+    <Pressable onPress={onPress} style={[styles.banner, { backgroundColor: theme.primary }]}>
+      <Ionicons name="sparkles" size={18} color={theme.onPrimary} />
+      <Text style={[styles.bannerText, { color: theme.onPrimary }]} numberOfLines={2}>
+        {label}
+      </Text>
+      <Ionicons name="chevron-forward" size={18} color={theme.onPrimary} />
+    </Pressable>
+  );
+}
+
 function Bubble({ message }: { message: AiMessage }) {
   const theme = useTheme();
   const isUser = message.role === 'user';
   const isCrisis = message.kind === 'crisis';
   const isAllowance = message.kind === 'allowance';
 
-  const bg = isUser
-    ? theme.primary
-    : isCrisis
-      ? theme.danger
-      : isAllowance
-        ? theme.warning
-        : theme.card;
+  const bg = isUser ? theme.primary : isCrisis ? theme.danger : isAllowance ? theme.warning : theme.card;
   const fg = isUser || isCrisis || isAllowance ? '#fff' : theme.text;
 
   return (
@@ -153,7 +197,9 @@ function Bubble({ message }: { message: AiMessage }) {
           isUser ? styles.bubbleUser : styles.bubbleOther,
         ]}
       >
-        <Text style={[styles.bubbleText, { color: fg }]}>{message.content}</Text>
+        <Text style={[styles.bubbleText, { color: fg }]} selectable>
+          {message.content}
+        </Text>
       </View>
     </View>
   );
@@ -167,6 +213,8 @@ const styles = StyleSheet.create({
   bubbleUser: { borderBottomRightRadius: Radius.sm },
   bubbleOther: { borderBottomLeftRadius: Radius.sm, borderWidth: StyleSheet.hairlineWidth },
   bubbleText: { fontSize: 16, lineHeight: 22 },
+  banner: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, marginHorizontal: Spacing.four, marginBottom: Spacing.two, paddingHorizontal: Spacing.four, paddingVertical: Spacing.three, borderRadius: Radius.md },
+  bannerText: { flex: 1, fontSize: 14, fontWeight: '600' },
   typing: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingHorizontal: Spacing.four, paddingBottom: Spacing.two },
   typingText: { fontSize: 13 },
   composer: { flexDirection: 'row', alignItems: 'flex-end', gap: Spacing.two, paddingHorizontal: Spacing.three, paddingTop: Spacing.three, borderTopWidth: StyleSheet.hairlineWidth },

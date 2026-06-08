@@ -184,6 +184,8 @@ export const Captures = {
         `/source_captures/${id}/candidate_split_memories`,
       )
       .then((r) => r.candidate_split_memories),
+  keepAsOne: (id: number) =>
+    api.post<{ memory: Memory }>(`/source_captures/${id}/keep_as_one`).then((r) => r.memory),
 };
 
 export const Candidates = {

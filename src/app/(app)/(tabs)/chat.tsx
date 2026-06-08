@@ -52,6 +52,22 @@ export default function ChatListScreen() {
           data={conversations.data}
           keyExtractor={(c) => String(c.id)}
           contentContainerStyle={styles.list}
+          ListHeaderComponent={
+            conversations.data.length > 0 ? (
+              <Card
+                onPress={() => router.push(`/chat/${conversations.data![0].id}`)}
+                style={[styles.continueCard, { backgroundColor: theme.primary }]}
+              >
+                <View style={styles.rowMain}>
+                  <Text style={[styles.continueLabel, { color: theme.onPrimary }]}>Continue where you left off</Text>
+                  <Text style={[styles.continueTitle, { color: theme.onPrimary }]} numberOfLines={1}>
+                    {conversations.data![0].title || 'Chat'}
+                  </Text>
+                </View>
+                <Ionicons name="arrow-forward" size={20} color={theme.onPrimary} />
+              </Card>
+            ) : null
+          }
           renderItem={({ item }) => (
             <Card onPress={() => router.push(`/chat/${item.id}`)} style={styles.row}>
               <View style={styles.rowMain}>
@@ -76,6 +92,9 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.four, paddingBottom: Spacing.three },
   title: { fontSize: 28, fontWeight: '700' },
   list: { paddingHorizontal: Spacing.four, paddingBottom: Spacing.eight, gap: Spacing.three },
+  continueCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, marginBottom: Spacing.two },
+  continueLabel: { fontSize: 12, fontWeight: '700', opacity: 0.85 },
+  continueTitle: { fontSize: 16, fontWeight: '700' },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   rowMain: { flex: 1, gap: 2 },
   rowTitle: { fontSize: 16, fontWeight: '600' },

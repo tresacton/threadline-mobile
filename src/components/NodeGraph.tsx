@@ -1,9 +1,45 @@
 import { useMemo, useState } from 'react';
 import { LayoutChangeEvent, ScrollView, StyleSheet, View } from 'react-native';
-import Svg, { Circle, G, Line, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, G, Line, Text as SvgText, TSpan } from 'react-native-svg';
 
 import { useTheme } from '@/hooks/use-theme';
 import type { EgoGraph, GraphNode } from '@/lib/api/types';
+
+/**
+ * Word-aware wrap of a label into up to `maxLines` lines of ~`perLine` chars.
+ * Long single words are hard-split; overflow past maxLines gets an ellipsis.
+ */
+function wrapLabel(label: string, perLine: number, maxLines: number): string[] {
+  const words = label.trim().split(/\s+/);
+  const lines: string[] = [];
+  let cur = '';
+  for (const w of words) {
+    const candidate = cur ? `${cur} ${w}` : w;
+    if (candidate.length <= perLine) {
+      cur = candidate;
+      continue;
+    }
+    if (cur) lines.push(cur);
+    if (lines.length >= maxLines) break;
+    if (w.length > perLine) {
+      let rest = w;
+      while (rest.length > perLine && lines.length < maxLines) {
+        lines.push(rest.slice(0, perLine));
+        rest = rest.slice(perLine);
+      }
+      cur = rest;
+    } else {
+      cur = w;
+    }
+  }
+  if (cur && lines.length < maxLines) lines.push(cur);
+  const shown = lines.join(' ').replace(/\s+/g, ' ').trim();
+  if (shown.length < label.replace(/\s+/g, ' ').trim().length && lines.length) {
+    const last = lines[lines.length - 1];
+    lines[lines.length - 1] = `${last.replace(/…$/, '').slice(0, perLine - 1)}…`;
+  }
+  return lines;
+}
 
 interface NodeGraphProps {
   data: EgoGraph;
@@ -17,8 +53,6 @@ interface Placed {
   r: number;
   ring: 'center' | 'first' | 'second';
 }
-
-const truncate = (s: string, n = 16) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 
 /**
  * Interactive ego-network graph. Sizes to its container so it opens fully
@@ -107,28 +141,38 @@ export function NodeGraph({ data, onSelectNode }: NodeGraphProps) {
             {lines.map((s, i) => (
               <Line key={`e${i}`} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} stroke={theme.border} strokeWidth={1} />
             ))}
-            {placed.map((p) => (
-              <G key={p.node.id} onPress={() => onSelectNode(p.node)}>
-                <Circle
-                  cx={p.x}
-                  cy={p.y}
-                  r={p.r}
-                  fill={colorFor(p.node.type, p.ring === 'center')}
-                  stroke={theme.background}
-                  strokeWidth={2}
-                />
-                <SvgText
-                  x={p.x}
-                  y={p.y + p.r + 12}
-                  fill={theme.text}
-                  fontSize={p.ring === 'second' ? 9 : 11}
-                  fontWeight={p.ring === 'center' ? '700' : '400'}
-                  textAnchor="middle"
-                >
-                  {truncate(p.node.label)}
-                </SvgText>
-              </G>
-            ))}
+            {placed.map((p) => {
+              const fontSize = p.ring === 'second' ? 9 : 11;
+              const maxLines = p.ring === 'center' ? 3 : 2;
+              const perLine = p.ring === 'second' ? 16 : 20;
+              const lines = wrapLabel(p.node.label, perLine, maxLines);
+              return (
+                <G key={p.node.id} onPress={() => onSelectNode(p.node)}>
+                  <Circle
+                    cx={p.x}
+                    cy={p.y}
+                    r={p.r}
+                    fill={colorFor(p.node.type, p.ring === 'center')}
+                    stroke={theme.background}
+                    strokeWidth={2}
+                  />
+                  <SvgText
+                    x={p.x}
+                    y={p.y + p.r + 12}
+                    fill={theme.text}
+                    fontSize={fontSize}
+                    fontWeight={p.ring === 'center' ? '700' : '400'}
+                    textAnchor="middle"
+                  >
+                    {lines.map((ln, i) => (
+                      <TSpan key={i} x={p.x} dy={i === 0 ? 0 : fontSize + 1}>
+                        {ln}
+                      </TSpan>
+                    ))}
+                  </SvgText>
+                </G>
+              );
+            })}
           </Svg>
         </ScrollView>
       ) : null}

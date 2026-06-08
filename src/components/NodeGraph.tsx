@@ -3,7 +3,30 @@ import { LayoutChangeEvent, ScrollView, StyleSheet, View } from 'react-native';
 import Svg, { Circle, G, Line, Text as SvgText, TSpan } from 'react-native-svg';
 
 import { useTheme } from '@/hooks/use-theme';
+import type { ThemePalette } from '@/constants/theme';
 import type { EgoGraph, GraphNode } from '@/lib/api/types';
+
+// One colour per node type — kept consistent whether a node is the focus or a
+// neighbour, and shared with the legend so they always match.
+export function nodeTypeColor(theme: ThemePalette, type: string): string {
+  switch (type) {
+    case 'person':
+      return theme.accent;
+    case 'place':
+      return theme.success;
+    case 'life_period':
+      return theme.warning;
+    default:
+      return theme.primary; // memory
+  }
+}
+
+export const NODE_TYPE_LEGEND: { type: string; label: string }[] = [
+  { type: 'memory', label: 'Memory' },
+  { type: 'person', label: 'Person' },
+  { type: 'place', label: 'Place' },
+  { type: 'life_period', label: 'Life period' },
+];
 
 /**
  * Word-aware wrap of a label into up to `maxLines` lines of ~`perLine` chars.
@@ -67,19 +90,7 @@ export function NodeGraph({ data, onSelectNode }: NodeGraphProps) {
   const onLayout = (e: LayoutChangeEvent) =>
     setBox({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height });
 
-  const colorFor = (type: string, center: boolean) => {
-    if (center) return theme.primary;
-    switch (type) {
-      case 'person':
-        return theme.accent;
-      case 'place':
-        return theme.success;
-      case 'life_period':
-        return theme.warning;
-      default:
-        return theme.textSecondary;
-    }
-  };
+  const colorFor = (type: string) => nodeTypeColor(theme, type);
 
   const { placed, lines } = useMemo(() => {
     if (size <= 0) return { placed: [] as Placed[], lines: [] as { x1: number; y1: number; x2: number; y2: number }[] };
@@ -148,11 +159,14 @@ export function NodeGraph({ data, onSelectNode }: NodeGraphProps) {
               const lines = wrapLabel(p.node.label, perLine, maxLines);
               return (
                 <G key={p.node.id} onPress={() => onSelectNode(p.node)}>
+                  {p.ring === 'center' ? (
+                    <Circle cx={p.x} cy={p.y} r={p.r + 4} fill="none" stroke={theme.text} strokeWidth={2} />
+                  ) : null}
                   <Circle
                     cx={p.x}
                     cy={p.y}
                     r={p.r}
-                    fill={colorFor(p.node.type, p.ring === 'center')}
+                    fill={colorFor(p.node.type)}
                     stroke={theme.background}
                     strokeWidth={2}
                   />

@@ -4,7 +4,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { NodeGraph } from '@/components/NodeGraph';
+import { NODE_TYPE_LEGEND, NodeGraph, nodeTypeColor } from '@/components/NodeGraph';
 import { ErrorView, LoadingView } from '@/components/ui/states';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -97,6 +97,15 @@ export default function EgoGraphScreen() {
             <Warn theme={theme}>Lots of connections — showing direct ones only to keep it readable.</Warn>
           ) : null}
 
+          <View style={styles.legend}>
+            {NODE_TYPE_LEGEND.map((l) => (
+              <View key={l.type} style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: nodeTypeColor(theme, l.type) }]} />
+                <Text style={[styles.legendText, { color: theme.textSecondary }]}>{l.label}</Text>
+              </View>
+            ))}
+          </View>
+
           <NodeGraph data={ego.data} onSelectNode={(n) => setCenter(n.id)} />
 
           <Text style={[styles.hint, { color: theme.textMuted }]}>
@@ -130,5 +139,9 @@ const styles = StyleSheet.create({
   openText: { fontSize: 14, fontWeight: '600' },
   warn: { flexDirection: 'row', gap: Spacing.two, alignItems: 'flex-start', marginHorizontal: Spacing.four, marginTop: Spacing.three, padding: Spacing.three, borderRadius: Radius.md },
   warnText: { flex: 1, fontSize: 13, lineHeight: 18 },
+  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.four, paddingHorizontal: Spacing.four, paddingTop: Spacing.three },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  legendDot: { width: 10, height: 10, borderRadius: 5 },
+  legendText: { fontSize: 12 },
   hint: { fontSize: 12, textAlign: 'center', paddingVertical: Spacing.three },
 });

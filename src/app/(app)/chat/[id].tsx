@@ -1,9 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
+import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -60,6 +63,20 @@ export default function ConversationScreen() {
 
   const scrollToEnd = () => requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
 
+  const copyMessage = async (text: string) => {
+    await Clipboard.setStringAsync(text);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+  };
+
+  const copyAll = async () => {
+    const transcript = messages
+      .map((m) => `${m.role === 'user' ? 'Me' : 'Companion'}: ${m.content}`)
+      .join('\n\n');
+    await Clipboard.setStringAsync(transcript);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    Alert.alert('Copied', 'The conversation was copied to your clipboard.');
+  };
+
   const send = async () => {
     const content = draft.trim();
     if (!content || sending) return;
@@ -99,7 +116,18 @@ export default function ConversationScreen() {
 
   return (
     <View style={[styles.flex, { backgroundColor: theme.background }]}>
-      <Stack.Screen options={{ headerShown: true, title: conversation.data?.conversation.title || 'Companion' }} />
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: conversation.data?.conversation.title || 'Companion',
+          headerRight: () =>
+            messages.length > 0 ? (
+              <Pressable onPress={copyAll} hitSlop={10}>
+                <Ionicons name="copy-outline" size={22} color={theme.primary} />
+              </Pressable>
+            ) : null,
+        }}
+      />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -113,7 +141,7 @@ export default function ConversationScreen() {
           onContentSizeChange={scrollToEnd}
           keyboardDismissMode="interactive"
           keyboardShouldPersistTaps="handled"
-          renderItem={({ item }) => <Bubble message={item} />}
+          renderItem={({ item }) => <Bubble message={item} onLongPress={() => copyMessage(item.content)} />}
         />
 
         {hasReviewable(extras) ? <ReviewBanner extras={extras!} conversationId={conversationId} /> : null}
@@ -179,7 +207,7 @@ function ReviewBanner({ extras, conversationId }: { extras: ConversationExtras; 
   );
 }
 
-function Bubble({ message }: { message: AiMessage }) {
+function Bubble({ message, onLongPress }: { message: AiMessage; onLongPress: () => void }) {
   const theme = useTheme();
   const isUser = message.role === 'user';
   const isCrisis = message.kind === 'crisis';
@@ -190,7 +218,9 @@ function Bubble({ message }: { message: AiMessage }) {
 
   return (
     <View style={[styles.bubbleRow, { justifyContent: isUser ? 'flex-end' : 'flex-start' }]}>
-      <View
+      <Pressable
+        onLongPress={onLongPress}
+        delayLongPress={250}
         style={[
           styles.bubble,
           { backgroundColor: bg, borderColor: theme.border },
@@ -200,7 +230,7 @@ function Bubble({ message }: { message: AiMessage }) {
         <Text style={[styles.bubbleText, { color: fg }]} selectable>
           {message.content}
         </Text>
-      </View>
+      </Pressable>
     </View>
   );
 }

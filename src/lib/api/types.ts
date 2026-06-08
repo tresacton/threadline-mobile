@@ -68,6 +68,7 @@ export interface Person {
   name: string;
   relationship_label?: string | null;
   notes?: string | null;
+  memory_count?: number;
 }
 
 export interface Place {
@@ -77,6 +78,8 @@ export interface Place {
   region?: string | null;
   country?: string | null;
   place_type?: string | null;
+  notes?: string | null;
+  memory_count?: number;
 }
 
 export interface LifePeriod {
@@ -335,4 +338,45 @@ export interface ScanEligibility {
   entitled: boolean;
   changed_since_last: boolean;
   reason: string | null;
+}
+
+export interface Reflection {
+  id: number;
+  title: string | null;
+  body: string | null;
+  ai_generated: boolean;
+  created_at: string;
+  memory_ids: number[];
+}
+
+export interface VoiceSession {
+  id: number;
+  status: string | null;
+  provider: string | null;
+  started_at: string | null;
+  ended_at: string | null;
+  initial_mode: string | null;
+  current_mode: string | null;
+  segment_count: number;
+}
+
+export interface GraphNode {
+  id: string;
+  label: string;
+  type: 'memory' | 'person' | 'place' | 'life_period';
+  weight: number;
+  url: string;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  kind: string;
+  label: string;
+}
+
+export interface GraphData {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  truncated: boolean;
 }

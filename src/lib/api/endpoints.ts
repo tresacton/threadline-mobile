@@ -9,6 +9,7 @@ import type {
   Entitlement,
   Goal,
   GoalProgress,
+  GraphData,
   JobCandidate,
   LifePeriod,
   Memory,
@@ -17,6 +18,7 @@ import type {
   OpenThread,
   Person,
   Place,
+  Reflection,
   Residency,
   ScanEligibility,
   SourceCapture,
@@ -25,6 +27,7 @@ import type {
   TimelineMemory,
   Turn,
   UserSettings,
+  VoiceSession,
 } from './types';
 
 // ---- Memories ----
@@ -69,6 +72,9 @@ export const People = {
   get: (id: number) => api.get<{ person: Person }>(`/people/${id}`).then((r) => r.person),
   create: (person: Partial<Person>) =>
     api.post<{ person: Person }>('/people', { person }).then((r) => r.person),
+  update: (id: number, person: Partial<Person>) =>
+    api.patch<{ person: Person }>(`/people/${id}`, { person }).then((r) => r.person),
+  remove: (id: number) => api.delete<void>(`/people/${id}`),
 };
 
 export const Places = {
@@ -76,12 +82,18 @@ export const Places = {
   get: (id: number) => api.get<{ place: Place }>(`/places/${id}`).then((r) => r.place),
   create: (place: Partial<Place>) =>
     api.post<{ place: Place }>('/places', { place }).then((r) => r.place),
+  update: (id: number, place: Partial<Place>) =>
+    api.patch<{ place: Place }>(`/places/${id}`, { place }).then((r) => r.place),
+  remove: (id: number) => api.delete<void>(`/places/${id}`),
 };
 
 export const LifePeriods = {
   list: () => api.get<{ life_periods: LifePeriod[] }>('/life_periods').then((r) => r.life_periods),
   create: (life_period: Partial<LifePeriod>) =>
     api.post<{ life_period: LifePeriod }>('/life_periods', { life_period }).then((r) => r.life_period),
+  update: (id: number, life_period: Partial<LifePeriod>) =>
+    api.patch<{ life_period: LifePeriod }>(`/life_periods/${id}`, { life_period }).then((r) => r.life_period),
+  remove: (id: number) => api.delete<void>(`/life_periods/${id}`),
 };
 
 export const Tags = {
@@ -252,4 +264,19 @@ export const Devices = {
 
 export const Account = {
   destroy: () => api.delete<void>('/account', { body: { confirm: true } }),
+};
+
+export const Reflections = {
+  list: () => api.get<{ reflections: Reflection[] }>('/reflections').then((r) => r.reflections),
+  get: (id: number) => api.get<{ reflection: Reflection }>(`/reflections/${id}`).then((r) => r.reflection),
+  create: (question: string) =>
+    api.post<{ reflection: Reflection }>('/reflections', { question }).then((r) => r.reflection),
+};
+
+export const Voice = {
+  list: () => api.get<{ voice_sessions: VoiceSession[] }>('/voice_sessions').then((r) => r.voice_sessions),
+};
+
+export const Graph = {
+  get: () => api.get<GraphData>('/graph'),
 };

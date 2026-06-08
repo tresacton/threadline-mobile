@@ -6,8 +6,10 @@ import { Alert, StyleSheet, Switch, Text, View } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
+import { Select } from '@/components/ui/Select';
 import { TextField } from '@/components/ui/TextField';
 import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
+import { BODY_SOURCE_OPTIONS, ENRICHMENT_LEVEL_OPTIONS } from '@/constants/options';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { Account, Settings } from '@/lib/api/endpoints';
@@ -21,17 +23,30 @@ export default function SettingsScreen() {
 
   const [displayName, setDisplayName] = useState('');
   const [companionName, setCompanionName] = useState('');
+  const [bodySource, setBodySource] = useState<string>('ai');
+  const [enrichmentLevel, setEnrichmentLevel] = useState<string>('practical');
+  const [trainingOptIn, setTrainingOptIn] = useState(false);
 
   useEffect(() => {
     if (settings.data) {
-      setDisplayName(settings.data.settings.display_name ?? '');
-      setCompanionName(settings.data.settings.companion_name);
+      const s = settings.data.settings;
+      setDisplayName(s.display_name ?? '');
+      setCompanionName(s.companion_name);
+      setBodySource(s.default_memory_body_source);
+      setEnrichmentLevel(s.enrichment_level);
+      setTrainingOptIn(s.training_opt_in);
     }
   }, [settings.data]);
 
   const save = useMutation({
     mutationFn: () =>
-      Settings.update({ display_name: displayName.trim(), companion_name: companionName.trim() }),
+      Settings.update({
+        display_name: displayName.trim(),
+        companion_name: companionName.trim(),
+        default_memory_body_source: bodySource,
+        enrichment_level: enrichmentLevel,
+        training_opt_in: trainingOptIn,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['settings'] });
       Alert.alert('Saved', 'Your settings were updated.');
@@ -68,6 +83,8 @@ export default function SettingsScreen() {
       <View style={styles.group}>
         <TextField label="Your name" value={displayName} onChangeText={setDisplayName} placeholder="Display name" />
         <TextField label="Companion name" value={companionName} onChangeText={setCompanionName} />
+        <Select label="Memory wording" value={bodySource} options={BODY_SOURCE_OPTIONS} onChange={setBodySource} />
+        <Select label="How much the companion prompts you" value={enrichmentLevel} options={ENRICHMENT_LEVEL_OPTIONS} onChange={setEnrichmentLevel} />
         <Button label="Save" onPress={() => save.mutate()} loading={save.isPending} />
       </View>
 
@@ -79,6 +96,16 @@ export default function SettingsScreen() {
           </Text>
         </View>
         <Switch value={biometricEnabled} onValueChange={(v) => setBiometricEnabled(v)} />
+      </Card>
+
+      <Card style={styles.switchRow}>
+        <View style={styles.switchText}>
+          <Text style={[styles.switchLabel, { color: theme.text }]}>Help improve the AI</Text>
+          <Text style={[styles.switchHint, { color: theme.textMuted }]}>
+            Allow anonymised use of your data for training. Off by default.
+          </Text>
+        </View>
+        <Switch value={trainingOptIn} onValueChange={setTrainingOptIn} />
       </Card>
 
       <View style={styles.danger}>

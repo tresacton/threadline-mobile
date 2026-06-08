@@ -20,15 +20,27 @@ const SECTIONS: { title: string; items: Item[] }[] = [
     items: [
       { icon: 'people-outline', label: 'People', route: '/people' },
       { icon: 'location-outline', label: 'Places', route: '/places' },
+      { icon: 'calendar-outline', label: 'Life periods', route: '/periods' },
       { icon: 'time-outline', label: 'Timeline', route: '/timeline' },
+      { icon: 'git-network-outline', label: 'Map', route: '/map' },
       { icon: 'git-branch-outline', label: 'Open threads', route: '/threads' },
+      { icon: 'notifications-outline', label: 'Notifications', route: '/notifications' },
+    ],
+  },
+  {
+    title: 'Companion',
+    items: [
+      { icon: 'sparkles-outline', label: 'Reflect', route: '/reflect' },
+      { icon: 'mic-outline', label: 'Voice', route: '/voice-sessions' },
     ],
   },
   {
     title: 'Reconstruct',
     items: [
       { icon: 'flag-outline', label: 'Goals', route: '/goals' },
-      { icon: 'briefcase-outline', label: 'Find past jobs', route: '/jobs' },
+      { icon: 'briefcase-outline', label: 'Jobs', route: '/employments' },
+      { icon: 'search-outline', label: 'Find past jobs', route: '/jobs' },
+      { icon: 'home-outline', label: 'Residences', route: '/residencies' },
     ],
   },
   {

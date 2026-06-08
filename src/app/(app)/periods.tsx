@@ -9,59 +9,58 @@ import { TextField } from '@/components/ui/TextField';
 import { EmptyState, ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { People } from '@/lib/api/endpoints';
+import { LifePeriods } from '@/lib/api/endpoints';
 
-export default function PeopleScreen() {
+export default function PeriodsScreen() {
   const theme = useTheme();
   const qc = useQueryClient();
-  const people = useQuery({ queryKey: ['people'], queryFn: People.list });
+  const periods = useQuery({ queryKey: ['life_periods'], queryFn: LifePeriods.list });
   const [name, setName] = useState('');
-  const [relationship, setRelationship] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const add = useMutation({
-    mutationFn: () => People.create({ name: name.trim(), relationship_label: relationship.trim() || undefined }),
+    mutationFn: () => LifePeriods.create({ name: name.trim() }),
     onSuccess: () => {
       setName('');
-      setRelationship('');
-      qc.invalidateQueries({ queryKey: ['people'] });
+      qc.invalidateQueries({ queryKey: ['life_periods'] });
     },
     onError: (e) => setError(humanizeError(e)),
   });
 
   return (
     <View style={[styles.flex, { backgroundColor: theme.background }]}>
-      <Stack.Screen options={{ headerShown: true, title: 'People' }} />
+      <Stack.Screen options={{ headerShown: true, title: 'Life periods' }} />
       <View style={styles.form}>
-        <TextField label="Add someone" value={name} onChangeText={setName} placeholder="Name" error={error} />
-        <TextField value={relationship} onChangeText={setRelationship} placeholder="Relationship (optional)" />
+        <TextField label="New period" value={name} onChangeText={setName} placeholder="e.g. University years" error={error} />
         <Button
-          label="Add person"
+          label="Add period"
           onPress={() => {
             setError(null);
-            if (!name.trim()) return setError('Enter a name.');
+            if (!name.trim()) return setError('Give it a name.');
             add.mutate();
           }}
           loading={add.isPending}
         />
       </View>
 
-      {people.isLoading ? (
+      {periods.isLoading ? (
         <LoadingView />
-      ) : people.error ? (
-        <ErrorView error={people.error} onRetry={() => people.refetch()} />
-      ) : !people.data || people.data.length === 0 ? (
-        <EmptyState title="No people yet" body="Add the people who appear in your memories." />
+      ) : periods.error ? (
+        <ErrorView error={periods.error} onRetry={() => periods.refetch()} />
+      ) : !periods.data || periods.data.length === 0 ? (
+        <EmptyState title="No life periods yet" body="Periods anchor fuzzy memories in time." />
       ) : (
         <FlatList
-          data={people.data}
+          data={periods.data}
           keyExtractor={(p) => String(p.id)}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <Card style={styles.row} onPress={() => router.push(`/person/${item.id}`)}>
+            <Card style={styles.row} onPress={() => router.push(`/period/${item.id}`)}>
               <Text style={[styles.name, { color: theme.text }]}>{item.name}</Text>
-              {item.relationship_label ? (
-                <Text style={[styles.meta, { color: theme.textMuted }]}>{item.relationship_label}</Text>
+              {item.date_range_start || item.date_range_end ? (
+                <Text style={[styles.meta, { color: theme.textMuted }]}>
+                  {item.date_range_start ?? '?'} – {item.date_range_end ?? 'present'}
+                </Text>
               ) : null}
             </Card>
           )}

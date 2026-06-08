@@ -75,6 +75,7 @@ export default function MemoryDetailScreen() {
       <Pills label="Tags" values={m.tags} />
 
       <View style={styles.actions}>
+        <ActionRow icon="create-outline" label="Edit memory" onPress={() => router.push(`/edit-memory/${memoryId}`)} />
         <ActionRow icon="sparkles-outline" label="Summarise with AI" onPress={() => summarise.mutate()} />
         <ActionRow icon="time-outline" label="Reconstruct the date" onPress={() => router.push(`/reconstruct/${memoryId}`)} />
         <ActionRow icon="bulb-outline" label="Add detail (enrich)" onPress={() => router.push(`/enrich/${memoryId}`)} />

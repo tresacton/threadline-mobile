@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 
@@ -58,7 +58,7 @@ export default function PlacesScreen() {
           keyExtractor={(p) => String(p.id)}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
-            <Card style={styles.row}>
+            <Card style={styles.row} onPress={() => router.push(`/place/${item.id}`)}>
               <Text style={[styles.name, { color: theme.text }]}>{item.name}</Text>
               {item.city ? <Text style={[styles.meta, { color: theme.textMuted }]}>{item.city}</Text> : null}
             </Card>

@@ -29,6 +29,7 @@ export default function EditMemoryScreen() {
   const [tags, setTags] = useState('');
   const [people, setPeople] = useState('');
   const [places, setPlaces] = useState('');
+  const [lifePeriods, setLifePeriods] = useState('');
 
   useEffect(() => {
     const m = memory.data;
@@ -42,6 +43,7 @@ export default function EditMemoryScreen() {
     setTags(m.tags.join(', '));
     setPeople(m.people.join(', '));
     setPlaces(m.places.join(', '));
+    setLifePeriods(m.life_periods.join(', '));
   }, [memory.data]);
 
   const save = useMutation({
@@ -56,6 +58,7 @@ export default function EditMemoryScreen() {
         tag_names: tags,
         person_names: people,
         place_names: places,
+        life_period_names: lifePeriods,
       } as Record<string, unknown>),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['memory', memoryId] });
@@ -91,6 +94,7 @@ export default function EditMemoryScreen() {
       <Select label="Date confidence" value={dateConfidence} options={DATE_CONFIDENCE_OPTIONS} onChange={setDateConfidence} />
       <TextField label="People (comma-separated)" value={people} onChangeText={setPeople} placeholder="Mum, Sh.S" />
       <TextField label="Places (comma-separated)" value={places} onChangeText={setPlaces} placeholder="Sydney" />
+      <TextField label="Life periods (comma-separated)" value={lifePeriods} onChangeText={setLifePeriods} placeholder="University years" />
       <TextField label="Tags (comma-separated)" value={tags} onChangeText={setTags} placeholder="work, family" />
       <Text style={[styles.note, { color: theme.textMuted }]}>
         Your original captured wording is always kept — this edits the structured version.

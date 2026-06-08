@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -36,7 +36,9 @@ export default function ReviewCaptureScreen() {
   const suggest = useMutation({
     mutationFn: () => Captures.suggestSplits(captureId),
     onSuccess: () => {
-      Alert.alert('Looking for memories', 'Suggestions will appear here shortly — pull to refresh.');
+      // The split runs as a background job, so poll a few times for the results
+      // (the pull-to-refresh and Refresh button also work).
+      [1500, 3500, 6000, 9000].forEach((ms) => setTimeout(() => candidates.refetch(), ms));
     },
     onError: (e) => Alert.alert('Could not analyse', humanizeError(e)),
   });
@@ -62,7 +64,18 @@ export default function ReviewCaptureScreen() {
   const pending = candidates.data ?? [];
 
   return (
-    <ScrollView contentInsetAdjustmentBehavior="never" style={{ backgroundColor: theme.background }} contentContainerStyle={styles.content}>
+    <ScrollView
+      contentInsetAdjustmentBehavior="never"
+      style={{ backgroundColor: theme.background }}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl
+          refreshing={candidates.isFetching}
+          onRefresh={() => candidates.refetch()}
+          tintColor={theme.textMuted}
+        />
+      }
+    >
       <Stack.Screen options={{ headerShown: true, title: 'Review' }} />
 
       <Text style={[styles.lead, { color: theme.textSecondary }]}>
@@ -83,15 +96,16 @@ export default function ReviewCaptureScreen() {
         {pending.length === 0 ? (
           <>
             <Text style={[styles.splitHint, { color: theme.textMuted }]}>
-              Let the companion suggest where this could split into distinct memories.
+              {suggest.isSuccess
+                ? 'Looking for distinct memories… this can take a few seconds. Pull down to refresh.'
+                : 'Let the companion suggest where this could split into distinct memories.'}
             </Text>
             <Button
-              label="Find possible memories"
+              label={suggest.isSuccess ? 'Scan again' : 'Find possible memories'}
               variant="secondary"
               onPress={() => suggest.mutate()}
-              loading={suggest.isPending}
+              loading={suggest.isPending || candidates.isFetching}
             />
-            <Button label="Refresh" variant="ghost" onPress={() => candidates.refetch()} />
           </>
         ) : (
           pending.map((c) => (
@@ -131,6 +145,12 @@ function CandidateCard({
     onSuccess: refresh,
   });
 
+  const chipGroups: { label: string; values: string[] }[] = [
+    { label: 'People', values: candidate.suggested_people ?? [] },
+    { label: 'Places', values: candidate.suggested_places ?? [] },
+    { label: 'Tags', values: candidate.suggested_tags ?? [] },
+  ].filter((g) => g.values.length > 0);
+
   return (
     <Card style={styles.candidate}>
       <Text style={[styles.candidateTitle, { color: theme.text }]}>
@@ -142,8 +162,37 @@ function CandidateCard({
         </Text>
       ) : null}
       {candidate.suggested_body ? (
-        <Text style={[styles.candidateBody, { color: theme.textSecondary }]}>{candidate.suggested_body}</Text>
+        <Text style={[styles.candidateBody, { color: theme.text }]}>{candidate.suggested_body}</Text>
       ) : null}
+      {candidate.source_excerpt ? (
+        <Text style={[styles.excerpt, { color: theme.textMuted, borderLeftColor: theme.border }]}>
+          “{candidate.source_excerpt}”
+        </Text>
+      ) : null}
+
+      {chipGroups.map((g) => (
+        <View key={g.label} style={styles.chipRow}>
+          <Text style={[styles.chipLabel, { color: theme.textSecondary }]}>{g.label}</Text>
+          <View style={styles.chips}>
+            {g.values.map((v) => (
+              <View key={v} style={[styles.chip, { backgroundColor: theme.backgroundElement }]}>
+                <Text style={[styles.chipText, { color: theme.text }]}>{v}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      ))}
+
+      {candidate.uncertainties && candidate.uncertainties.length > 0 ? (
+        <View style={styles.uncertain}>
+          {candidate.uncertainties.map((u, i) => (
+            <Text key={i} style={[styles.uncertainText, { color: theme.warning }]}>
+              • {u}
+            </Text>
+          ))}
+        </View>
+      ) : null}
+
       <View style={styles.candidateActions}>
         <Button label="Accept" fullWidth={false} onPress={() => accept.mutate()} loading={accept.isPending} />
         <Button label="Discard" variant="ghost" fullWidth={false} onPress={() => reject.mutate()} disabled={reject.isPending} />
@@ -165,5 +214,13 @@ const styles = StyleSheet.create({
   candidateTitle: { fontSize: 16, fontWeight: '600' },
   candidateMeta: { fontSize: 13 },
   candidateBody: { fontSize: 14, lineHeight: 20 },
+  excerpt: { fontSize: 13, fontStyle: 'italic', lineHeight: 19, borderLeftWidth: 2, paddingLeft: Spacing.three },
+  chipRow: { gap: 4 },
+  chipLabel: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.4 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  chip: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
+  chipText: { fontSize: 13 },
+  uncertain: { gap: 2, marginTop: 2 },
+  uncertainText: { fontSize: 13, lineHeight: 18 },
   candidateActions: { flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.one },
 });

@@ -249,10 +249,16 @@ export interface SourceCapture {
 
 export interface CandidateSplitMemory {
   id: number;
+  source_capture_id?: number;
+  status?: string;
   suggested_title: string | null;
   suggested_body: string | null;
+  source_excerpt?: string | null;
   suggested_fuzzy_date_label: string | null;
-  status?: string;
+  suggested_tags?: string[];
+  suggested_people?: string[];
+  suggested_places?: string[];
+  uncertainties?: string[];
 }
 
 // ---- Chat ----

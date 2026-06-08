@@ -38,8 +38,11 @@
       "expo-secure-store",
       [
         "expo-local-authentication",
-        { "faceIDPermission": "Use Face ID to unlock Threadline." }
-      ]
+        {
+          "faceIDPermission": "Use Face ID to unlock Threadline."
+        }
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

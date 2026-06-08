@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
+import { DateField } from '@/components/ui/DateField';
 import { Screen } from '@/components/ui/Screen';
 import { Select } from '@/components/ui/Select';
 import { TextField } from '@/components/ui/TextField';
@@ -79,8 +80,8 @@ export default function EditEmploymentScreen() {
       <Stack.Screen options={{ headerShown: true, title: 'Edit job' }} />
       <TextField label="Employer" value={employer} onChangeText={setEmployer} />
       <TextField label="Role" value={title} onChangeText={setTitle} placeholder="Title" />
-      <TextField label="Start (YYYY-MM-DD)" value={start} onChangeText={setStart} placeholder="2015-03-01" autoCapitalize="none" />
-      <TextField label="End (YYYY-MM-DD)" value={end} onChangeText={setEnd} placeholder="leave blank if current" autoCapitalize="none" />
+      <DateField label="Started" value={start || null} onChange={(d) => setStart(d ?? '')} placeholder="Pick a date" />
+      <DateField label="Ended (leave blank if current)" value={end || null} onChange={(d) => setEnd(d ?? '')} placeholder="Pick a date" />
       <Select label="Date confidence" value={confidence} options={DATE_CONFIDENCE_OPTIONS} onChange={setConfidence} />
       {employment ? (
         <Text style={{ color: theme.textMuted }}>

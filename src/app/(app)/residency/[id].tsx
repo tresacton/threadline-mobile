@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
+import { DateField } from '@/components/ui/DateField';
 import { Screen } from '@/components/ui/Screen';
 import { Select } from '@/components/ui/Select';
 import { TextField } from '@/components/ui/TextField';
@@ -72,8 +73,8 @@ export default function EditResidencyScreen() {
     <Screen scroll contentStyle={{ gap: Spacing.four }}>
       <Stack.Screen options={{ headerShown: true, title: 'Edit residence' }} />
       <Text style={[styles.place, { color: theme.text }]}>{residency?.place_name ?? 'Residence'}</Text>
-      <TextField label="Moved in (YYYY-MM-DD)" value={start} onChangeText={setStart} placeholder="2016-06-01" autoCapitalize="none" />
-      <TextField label="Moved out (YYYY-MM-DD)" value={end} onChangeText={setEnd} placeholder="leave blank if current" autoCapitalize="none" />
+      <DateField label="Moved in" value={start || null} onChange={(d) => setStart(d ?? '')} placeholder="Pick a date" />
+      <DateField label="Moved out (leave blank if current)" value={end || null} onChange={(d) => setEnd(d ?? '')} placeholder="Pick a date" />
       <Select label="Date confidence" value={confidence} options={DATE_CONFIDENCE_OPTIONS} onChange={setConfidence} />
       <TextField label="Notes" value={notes} onChangeText={setNotes} multiline style={styles.area} />
       <Button label="Save" onPress={() => save.mutate()} loading={save.isPending} />

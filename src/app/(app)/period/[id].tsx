@@ -5,6 +5,7 @@ import { Alert, StyleSheet, Text } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { DateField } from '@/components/ui/DateField';
 import { Picker } from '@/components/ui/Picker';
 import { Screen } from '@/components/ui/Screen';
 import { Select } from '@/components/ui/Select';
@@ -87,8 +88,8 @@ export default function EditPeriodScreen() {
       <Stack.Screen options={{ headerShown: true, title: 'Life period' }} />
       <TextField label="Name" value={name} onChangeText={setName} />
       <TextField label="Description" value={description} onChangeText={setDescription} multiline style={styles.area} />
-      <TextField label="Start (YYYY-MM-DD)" value={start} onChangeText={setStart} placeholder="2018-01-01" autoCapitalize="none" />
-      <TextField label="End (YYYY-MM-DD)" value={end} onChangeText={setEnd} placeholder="2021-12-31" autoCapitalize="none" />
+      <DateField label="Approx. start" value={start || null} onChange={(d) => setStart(d ?? '')} placeholder="Pick a date" />
+      <DateField label="Approx. end" value={end || null} onChange={(d) => setEnd(d ?? '')} placeholder="Pick a date" />
       <Select label="Date confidence" value={confidence} options={DATE_CONFIDENCE_OPTIONS} onChange={setConfidence} />
       <Picker
         label="Place / residence (optional)"

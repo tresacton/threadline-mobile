@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
+import { DateField } from '@/components/ui/DateField';
 import { Screen } from '@/components/ui/Screen';
 import { Select } from '@/components/ui/Select';
 import { TextField } from '@/components/ui/TextField';
@@ -115,12 +116,11 @@ export default function EditMemoryScreen() {
         onChangeText={setDateLabel}
         placeholder="Around 2014"
       />
-      <TextField
+      <DateField
         label="Exact date (if known)"
-        value={exactDate}
-        onChangeText={setExactDate}
-        placeholder="YYYY-MM-DD"
-        autoCapitalize="none"
+        value={exactDate || null}
+        onChange={(d) => setExactDate(d ?? '')}
+        placeholder="Pick a date"
       />
       <Select label="Date precision" value={datePrecision} options={DATE_PRECISION_OPTIONS} onChange={setDatePrecision} />
       <Select label="Date confidence" value={dateConfidence} options={DATE_CONFIDENCE_OPTIONS} onChange={setDateConfidence} />

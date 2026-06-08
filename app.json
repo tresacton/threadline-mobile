@@ -35,7 +35,11 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-local-authentication",
+        { "faceIDPermission": "Use Face ID to unlock Threadline." }
+      ]
     ],
     "experiments": {
       "typedRoutes": false,

@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 
 import { api } from '../api/client';
 import type { AuthUser, LoginResponse } from '../api/types';
@@ -25,6 +26,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [biometricEnabled, setBiometricEnabledState] = useState(false);
   const bootstrapped = useRef(false);
+  const statusRef = useRef(status);
+  const appState = useRef(AppState.currentState);
+
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   // A dead refresh token anywhere in the app forces a clean sign-out.
   useEffect(() => {
@@ -34,15 +41,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const enterSignedIn = useCallback(async (knownUser: AuthUser | null): Promise<boolean> => {
-    const ok = await sessionStore.refresh();
-    if (!ok) {
-      setStatus('signedOut');
-      return false;
-    }
+  // Re-lock when returning to the app from the background (the expected behaviour
+  // for a biometric app-lock). Face ID/Touch ID prompts only move the app to
+  // 'inactive', not 'background', so unlocking won't trigger a re-lock loop.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      const prev = appState.current;
+      appState.current = next;
+      if (prev === 'background' && next === 'active' && biometricEnabled && statusRef.current === 'signedIn') {
+        setStatus('locked');
+      }
+    });
+    return () => sub.remove();
+  }, [biometricEnabled]);
+
+  // Entering the app is just a UI state change — the access token is refreshed
+  // lazily by the API client on the next request. We do NOT refresh here, so a
+  // transient network blip (or biometrics) can't bounce the user to the login
+  // screen; a genuinely dead refresh token surfaces as a 401 -> onSignOut.
+  const enterApp = useCallback((knownUser: AuthUser | null) => {
     if (knownUser) setUser(knownUser);
     setStatus('signedIn');
-    return true;
   }, []);
 
   // Bootstrap once: resume a stored session, gated by biometrics if enabled.
@@ -68,17 +87,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (useBiometric) {
         setStatus('locked');
       } else {
-        await enterSignedIn(meta?.user ?? null);
+        enterApp(meta?.user ?? null);
       }
     })();
-  }, [enterSignedIn]);
+  }, [enterApp]);
 
   const unlock = useCallback(async (): Promise<boolean> => {
     const ok = await biometric.authenticate('Unlock Threadline');
     if (!ok) return false;
     const meta = await storage.getSessionMeta();
-    return enterSignedIn(meta?.user ?? null);
-  }, [enterSignedIn]);
+    enterApp(meta?.user ?? null);
+    return true;
+  }, [enterApp]);
 
   const login = useCallback(async (email: string, password: string, deviceName?: string) => {
     const res = await api.post<LoginResponse>(

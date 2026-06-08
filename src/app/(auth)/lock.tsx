@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
@@ -12,10 +12,17 @@ export default function LockScreen() {
   const theme = useTheme();
   const { unlock, logout, user } = useAuth();
   const [tried, setTried] = useState(false);
+  const prompting = useRef(false);
 
   const attempt = async () => {
+    if (prompting.current) return; // never stack biometric prompts
+    prompting.current = true;
     setTried(true);
-    await unlock();
+    try {
+      await unlock();
+    } finally {
+      prompting.current = false;
+    }
   };
 
   // Prompt automatically on first show — the user expects Face ID immediately.

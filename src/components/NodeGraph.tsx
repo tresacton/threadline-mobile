@@ -144,7 +144,7 @@ export function NodeGraph({ data, onSelectNode }: NodeGraphProps) {
             {placed.map((p) => {
               const fontSize = p.ring === 'second' ? 9 : 11;
               const maxLines = p.ring === 'center' ? 3 : 2;
-              const perLine = p.ring === 'second' ? 16 : 20;
+              const perLine = p.ring === 'second' ? 26 : 30;
               const lines = wrapLabel(p.node.label, perLine, maxLines);
               return (
                 <G key={p.node.id} onPress={() => onSelectNode(p.node)}>

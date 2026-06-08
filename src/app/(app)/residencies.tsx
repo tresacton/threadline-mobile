@@ -5,7 +5,7 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Select } from '@/components/ui/Select';
+import { Picker } from '@/components/ui/Picker';
 import { EmptyState, ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -36,11 +36,12 @@ export default function ResidenciesScreen() {
       <View style={styles.form}>
         {places.data && places.data.length > 0 ? (
           <>
-            <Select
+            <Picker
               label="Add a residence — choose a place"
+              placeholder="Choose a place"
               value={placeId}
               options={places.data.map((p) => ({ value: p.id, label: p.name }))}
-              onChange={(v) => setPlaceId(Number(v))}
+              onChange={(v) => setPlaceId(v as number | null)}
             />
             {error ? <Text style={{ color: theme.danger }}>{error}</Text> : null}
             <Button

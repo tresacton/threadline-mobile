@@ -5,6 +5,7 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Picker } from '@/components/ui/Picker';
 import { Select } from '@/components/ui/Select';
 import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
 import { TEMPORAL_RELATION_OPTIONS } from '@/constants/options';
@@ -73,12 +74,19 @@ export default function ReconstructScreen() {
         <Select value={relType} options={TEMPORAL_RELATION_OPTIONS} onChange={setRelType} />
         {others.length > 0 ? (
           <>
-            <Text style={[styles.label, { color: theme.textSecondary, marginTop: Spacing.two }]}>…this one</Text>
-            <Select
-              value={otherId}
-              options={others.slice(0, 40).map((m) => ({ value: m.id, label: m.title || 'Untitled' }))}
-              onChange={(v) => setOtherId(Number(v))}
-            />
+            <View style={{ marginTop: Spacing.two }}>
+              <Picker
+                label="…this one"
+                placeholder="Choose a memory"
+                value={otherId}
+                options={others.map((m) => ({
+                  value: m.id,
+                  label: m.title || 'Untitled',
+                  sublabel: m.date_label || undefined,
+                }))}
+                onChange={(v) => setOtherId(v as number | null)}
+              />
+            </View>
             <Button
               label="Add relation"
               onPress={() => {

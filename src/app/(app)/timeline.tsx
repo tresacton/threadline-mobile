@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 
 import { Card } from '@/components/ui/Card';
+import { Picker } from '@/components/ui/Picker';
 import { Select } from '@/components/ui/Select';
 import { EmptyState, ErrorView, LoadingView } from '@/components/ui/states';
 import { Spacing } from '@/constants/theme';
@@ -91,16 +92,16 @@ export default function TimelineScreen() {
         {showFilters ? (
           <View style={styles.filters}>
             {people.data?.length ? (
-              <Select label="Person" value={personId} options={people.data.map((p) => ({ value: p.id, label: p.name }))} onChange={(v) => pickOnly(setPersonId, Number(v))} />
+              <Picker label="Person" placeholder="Any person" allowClear value={personId} options={people.data.map((p) => ({ value: p.id, label: p.name }))} onChange={(v) => (v == null ? setPersonId(null) : pickOnly(setPersonId, Number(v)))} />
             ) : null}
             {places.data?.length ? (
-              <Select label="Place" value={placeId} options={places.data.map((p) => ({ value: p.id, label: p.name }))} onChange={(v) => pickOnly(setPlaceId, Number(v))} />
+              <Picker label="Place" placeholder="Any place" allowClear value={placeId} options={places.data.map((p) => ({ value: p.id, label: p.name }))} onChange={(v) => (v == null ? setPlaceId(null) : pickOnly(setPlaceId, Number(v)))} />
             ) : null}
             {tags.data?.length ? (
-              <Select label="Tag" value={tagId} options={tags.data.map((t) => ({ value: t.id, label: t.name }))} onChange={(v) => pickOnly(setTagId, Number(v))} />
+              <Picker label="Tag" placeholder="Any tag" allowClear value={tagId} options={tags.data.map((t) => ({ value: t.id, label: t.name }))} onChange={(v) => (v == null ? setTagId(null) : pickOnly(setTagId, Number(v)))} />
             ) : null}
             {periods.data?.length ? (
-              <Select label="Life period" value={lifePeriodId} options={periods.data.map((p) => ({ value: p.id, label: p.name }))} onChange={(v) => pickOnly(setLifePeriodId, Number(v))} />
+              <Picker label="Life period" placeholder="Any period" allowClear value={lifePeriodId} options={periods.data.map((p) => ({ value: p.id, label: p.name }))} onChange={(v) => (v == null ? setLifePeriodId(null) : pickOnly(setLifePeriodId, Number(v)))} />
             ) : null}
             {hasFilter ? (
               <Pressable onPress={clearAll} style={styles.clear}>

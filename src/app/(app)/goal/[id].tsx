@@ -5,7 +5,7 @@ import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Select } from '@/components/ui/Select';
+import { Picker } from '@/components/ui/Picker';
 import { TextField } from '@/components/ui/TextField';
 import { ErrorView, LoadingView, humanizeError } from '@/components/ui/states';
 import { Spacing } from '@/constants/theme';
@@ -109,11 +109,14 @@ export default function GoalDetailScreen() {
       )}
 
       {linkable.length > 0 ? (
-        <Select
+        <Picker
           label="Link a memory"
+          placeholder="Search memories to link"
           value={null}
-          options={linkable.slice(0, 30).map((m) => ({ value: m.id, label: m.title || 'Untitled' }))}
-          onChange={(v) => link.mutate(Number(v))}
+          options={linkable.map((m) => ({ value: m.id, label: m.title || 'Untitled' }))}
+          onChange={(v) => {
+            if (v != null) link.mutate(Number(v));
+          }}
         />
       ) : null}
 

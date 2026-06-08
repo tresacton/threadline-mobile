@@ -43,7 +43,7 @@ export default function LockScreen() {
         </Text>
         <View style={styles.actions}>
           <Button label={tried ? 'Try again' : 'Unlock'} onPress={attempt} />
-          <Button label="Sign in as someone else" variant="ghost" onPress={logout} />
+          <Button label="Sign in with password instead" variant="ghost" onPress={logout} />
         </View>
       </View>
     </Screen>

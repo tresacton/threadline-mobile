@@ -55,7 +55,7 @@ export async function deleteSessionMeta(): Promise<void> {
 
 export async function getBiometricPreference(): Promise<boolean> {
   const raw = await SecureStore.getItemAsync(BIOMETRIC_PREF_KEY, SECURE_OPTS);
-  return raw == null ? true : raw === 'true'; // default on when available
+  return raw === 'true'; // opt-in: off until the user enables it (never traps a user)
 }
 
 export async function setBiometricPreference(enabled: boolean): Promise<void> {

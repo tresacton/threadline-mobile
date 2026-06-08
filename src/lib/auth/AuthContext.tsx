@@ -94,8 +94,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         storage.getRefreshToken(),
         storage.getSessionMeta(),
         storage.getBiometricPreference(),
-        biometric.isBiometricAvailable(),
-        biometric.biometricLabel(),
+        biometric.isLockAvailable(),
+        biometric.lockLabel(),
       ]);
       setBiometricEnabledState(prefEnabled);
       setBiometricAvailable(available);

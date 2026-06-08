@@ -24,7 +24,8 @@ export default function AppLayout() {
         headerTintColor: theme.primary,
         headerShadowVisible: false,
         headerBackButtonDisplayMode: 'minimal',
-        contentStyle: { backgroundColor: theme.background },
+        // A small, consistent breathing gap at the top of every screen.
+        contentStyle: { backgroundColor: theme.background, paddingTop: 10 },
       }}
     >
       <Stack.Screen name="(tabs)" />

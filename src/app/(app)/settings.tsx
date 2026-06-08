@@ -18,7 +18,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 export default function SettingsScreen() {
   const theme = useTheme();
   const qc = useQueryClient();
-  const { biometricEnabled, setBiometricEnabled, logout } = useAuth();
+  const { biometricEnabled, biometricAvailable, biometricLabel, lockNow, setBiometricEnabled, logout } = useAuth();
   const settings = useQuery({ queryKey: ['settings'], queryFn: Settings.get });
 
   const [displayName, setDisplayName] = useState('');
@@ -87,13 +87,19 @@ export default function SettingsScreen() {
 
       <Card style={styles.switchRow}>
         <View style={styles.switchText}>
-          <Text style={[styles.switchLabel, { color: theme.text }]}>Unlock with biometrics</Text>
+          <Text style={[styles.switchLabel, { color: theme.text }]}>Unlock with {biometricLabel}</Text>
           <Text style={[styles.switchHint, { color: theme.textMuted }]}>
-            Require Face ID / Touch ID to open the app.
+            {biometricAvailable
+              ? `Require ${biometricLabel} after the app has been in the background for 5 minutes.`
+              : `Not available on this device (no biometrics enrolled).`}
           </Text>
         </View>
-        <Switch value={biometricEnabled} onValueChange={(v) => setBiometricEnabled(v)} />
+        <Switch value={biometricEnabled} onValueChange={(v) => setBiometricEnabled(v)} disabled={!biometricAvailable} />
       </Card>
+
+      {biometricAvailable && biometricEnabled ? (
+        <Button label={`Lock now (test ${biometricLabel})`} variant="ghost" onPress={lockNow} />
+      ) : null}
 
 
       <View style={styles.danger}>

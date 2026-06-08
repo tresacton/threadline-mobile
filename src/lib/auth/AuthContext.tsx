@@ -12,22 +12,31 @@ export type AuthStatus = 'loading' | 'signedOut' | 'locked' | 'signedIn';
 interface AuthContextValue {
   status: AuthStatus;
   user: AuthUser | null;
-  biometricEnabled: boolean;
+  biometricEnabled: boolean; // the user's preference
+  biometricAvailable: boolean; // whether this device supports it
+  biometricLabel: string; // "Face ID" / "Touch ID" / "biometrics"
   login: (email: string, password: string, deviceName?: string) => Promise<void>;
   logout: () => Promise<void>;
   unlock: () => Promise<boolean>;
+  lockNow: () => void;
   setBiometricEnabled: (enabled: boolean) => Promise<void>;
 }
+
+// Only re-lock after the app has been in the background this long — quick app
+// switches shouldn't force a re-auth.
+const LOCK_AFTER_MS = 5 * 60 * 1000;
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [biometricEnabled, setBiometricEnabledState] = useState(false);
+  const [biometricEnabled, setBiometricEnabledState] = useState(false); // preference
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricLabel, setBiometricLabel] = useState('biometrics');
   const bootstrapped = useRef(false);
   const statusRef = useRef(status);
-  const appState = useRef(AppState.currentState);
+  const backgroundedAt = useRef<number | null>(null);
 
   useEffect(() => {
     statusRef.current = status;
@@ -41,19 +50,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  // Re-lock when returning to the app from the background (the expected behaviour
-  // for a biometric app-lock). Face ID/Touch ID prompts only move the app to
-  // 'inactive', not 'background', so unlocking won't trigger a re-lock loop.
+  // Re-lock only after the app has been backgrounded for LOCK_AFTER_MS. Face
+  // ID/Touch ID prompts move the app to 'inactive' (not 'background'), so they
+  // never set backgroundedAt — no re-lock loop while unlocking.
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next) => {
-      const prev = appState.current;
-      appState.current = next;
-      if (prev === 'background' && next === 'active' && biometricEnabled && statusRef.current === 'signedIn') {
-        setStatus('locked');
+      if (next === 'background') {
+        backgroundedAt.current = Date.now();
+        return;
+      }
+      if (next === 'active') {
+        const since = backgroundedAt.current;
+        backgroundedAt.current = null;
+        if (
+          since != null &&
+          Date.now() - since > LOCK_AFTER_MS &&
+          biometricEnabled &&
+          biometricAvailable &&
+          statusRef.current === 'signedIn'
+        ) {
+          setStatus('locked');
+        }
       }
     });
     return () => sub.remove();
-  }, [biometricEnabled]);
+  }, [biometricEnabled, biometricAvailable]);
 
   // Entering the app is just a UI state change — the access token is refreshed
   // lazily by the API client on the next request. We do NOT refresh here, so a
@@ -69,14 +90,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (bootstrapped.current) return;
     bootstrapped.current = true;
     (async () => {
-      const [refreshToken, meta, prefEnabled, available] = await Promise.all([
+      const [refreshToken, meta, prefEnabled, available, label] = await Promise.all([
         storage.getRefreshToken(),
         storage.getSessionMeta(),
         storage.getBiometricPreference(),
         biometric.isBiometricAvailable(),
+        biometric.biometricLabel(),
       ]);
-      const useBiometric = prefEnabled && available;
-      setBiometricEnabledState(useBiometric);
+      setBiometricEnabledState(prefEnabled);
+      setBiometricAvailable(available);
+      setBiometricLabel(label);
 
       if (!refreshToken) {
         setStatus('signedOut');
@@ -84,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       if (meta?.user) setUser(meta.user);
 
-      if (useBiometric) {
+      if (prefEnabled && available) {
         setStatus('locked');
       } else {
         enterApp(meta?.user ?? null);
@@ -126,12 +149,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const setBiometricEnabled = useCallback(async (enabled: boolean) => {
     await storage.setBiometricPreference(enabled);
-    setBiometricEnabledState(enabled && (await biometric.isBiometricAvailable()));
+    setBiometricEnabledState(enabled);
   }, []);
 
+  // Lock immediately — used by Settings to let the user test Face ID / Touch ID.
+  const lockNow = useCallback(() => {
+    if (biometricAvailable) setStatus('locked');
+  }, [biometricAvailable]);
+
   const value = useMemo<AuthContextValue>(
-    () => ({ status, user, biometricEnabled, login, logout, unlock, setBiometricEnabled }),
-    [status, user, biometricEnabled, login, logout, unlock, setBiometricEnabled],
+    () => ({
+      status,
+      user,
+      biometricEnabled,
+      biometricAvailable,
+      biometricLabel,
+      login,
+      logout,
+      unlock,
+      lockNow,
+      setBiometricEnabled,
+    }),
+    [status, user, biometricEnabled, biometricAvailable, biometricLabel, login, logout, unlock, lockNow, setBiometricEnabled],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
